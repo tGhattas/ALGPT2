@@ -1,10 +1,12 @@
 from datasets import load_dataset
 from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments
 
+from modeling_algpt2 import ALGPT2LMHeadModel
+
 
 def run():
     # Load a small dataset from hugging face
-    dataset = load_dataset('wikitext', 'wikitext-2-raw-v1')
+    dataset = load_dataset('squad_v2') # ['squad_v2', 'sst2', 'snli', 'openwebtext']
 
     # Load tokenizer and model
     model_name = "distilgpt2"
@@ -14,11 +16,24 @@ def run():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    model = GPT2LMHeadModel.from_pretrained(model_name)
+    model = ALGPT2LMHeadModel.from_pretrained(model_name)
 
     # Tokenize dataset
     def tokenize_function(examples):
-        return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=128)
+        # Handle different datasets
+        if 'text' in examples:  
+            return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=128)
+        elif 'context' in examples and 'question' in examples:  # For datasets like 'squad_v2'
+            return tokenizer(examples['context'], examples['question'], padding="max_length", truncation=True, max_length=128)
+        elif 'premise' in examples and 'hypothesis' in examples:  # For datasets like 'snli'
+            return tokenizer(examples['premise'], examples['hypothesis'], padding="max_length", truncation=True, max_length=128)
+        elif 'sentence' in examples:  # For datasets like 'sst2'
+            return tokenizer(examples['sentence'], padding="max_length", truncation=True, max_length=128)
+        else:
+            raise ValueError("Dataset structure not recognized.")
+        
+    # Minimize dataset for faster experimentation
+    dataset['train'] = dataset['train'].shuffle(seed=42).select(range(1000))
 
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
@@ -36,8 +51,8 @@ def run():
         num_train_epochs=1,
         logging_dir='./logs',
         logging_steps=10,
-        save_steps=10,
-        eval_steps=10,
+        save_steps=100000,
+        eval_steps=100000,
     )
 
     trainer = Trainer(
