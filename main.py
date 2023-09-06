@@ -4,9 +4,15 @@ from datasets import load_dataset
 from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
-
+import numpy as np
 
 DEFAULT_MODEL_NAME = "gpt2"
+
+def compute_metrics(eval_pred):
+        predictions, labels = eval_pred
+        predictions = np.argmax(predictions, axis=1)
+        accuracy = np.mean(predictions == labels)
+        return {'accuracy': accuracy}
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -76,6 +82,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
         tokenizer=tokenizer,
+        compute_metrics=compute_metrics
     )
 
     # Start training
@@ -95,4 +102,4 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     
 
 if __name__ == '__main__':
-    run(model_class_name='GPT2LMHeadModel', minimize_dataset=False, pretrained=False, depth=4)
+    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4)
