@@ -109,7 +109,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     trainer_evaluation_result['test_mean_perplexity'] = results['mean_perplexity']
     pprint(trainer_evaluation_result)
     with open(f"{save_path}/save_{model_class_name}-{depth}/eval_results.json", 'w') as f:
-        json.dump(results, f)
+        json.dump(trainer_evaluation_result, f)
     
 
 
