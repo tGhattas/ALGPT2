@@ -1,22 +1,39 @@
+import os
+from typing import Optional
 from datasets import load_dataset
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments
-
+from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config
+from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
 
 
-def run():
+DEFAULT_MODEL_NAME = "gpt2"
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False, pretrained: bool = False, depth: Optional[int] = None):
     # Load a small dataset from hugging face
-    dataset = load_dataset('squad_v2') # ['squad_v2', 'sst2', 'snli', 'openwebtext']
+    dataset = load_dataset("wikitext", "wikitext-2-raw-v1") # ['squad_v2', 'sst2', 'snli', 'openwebtext', 'wikitext-2']
+    print("dataset size:", len(dataset['train']))
+    if minimize_dataset:
+        dataset['train'] = dataset['train'].select(range(100))
+        dataset['validation'] = dataset['validation'].select(range(100))
 
     # Load tokenizer and model
-    model_name = "distilgpt2"
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
 
     # Set the padding token for the tokenizer
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    model = ALGPT2LMHeadModel.from_pretrained(model_name)
+    model_class = {'GPT2LMHeadModel': GPT2LMHeadModel, 'ALGPT2LMHeadModel': ALGPT2LMHeadModel}[model_class_name]
+    if pretrained:
+        model = model_class.from_pretrained(model_name)
+    else:
+        config = GPT2Config(vocab_size=tokenizer.vocab_size) if depth is None else GPT2Config(vocab_size=tokenizer.vocab_size, n_layer=depth)
+        model = model_class(config)
+    print(model)
+    print("number of parameters:", count_parameters(model))
 
     # Tokenize dataset
     def tokenize_function(examples):
@@ -32,9 +49,7 @@ def run():
         else:
             raise ValueError("Dataset structure not recognized.")
         
-    # Minimize dataset for faster experimentation
-    dataset['train'] = dataset['train'].shuffle(seed=42).select(range(1000))
-
+        
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
     # Add labels for the language modeling task
@@ -48,7 +63,7 @@ def run():
         output_dir="./results",
         per_device_train_batch_size=8,
         per_device_eval_batch_size=8,
-        num_train_epochs=1,
+        num_train_epochs=2,
         logging_dir='./logs',
         logging_steps=10,
         save_steps=100000,
@@ -66,9 +81,18 @@ def run():
     # Start training
     trainer.train()
 
-    trainer.evaluate()
+    # Evaluate the model
+    result = trainer.evaluate()
+    pprint(result)
 
-    print(len(tokenized_datasets["train"]))
+    # Check if Google Drive is mounted
+    if os.path.isdir("/content/drive"):
+        save_path = "/content/drive/MyDrive/Colab\ Notebooks/AL-GPT"
+    else:
+        save_path = "."
+    # Save the model
+    trainer.save_model(f"{save_path}/save_{model_class_name}-{depth}")
+    
 
 if __name__ == '__main__':
-    run()
+    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4)
