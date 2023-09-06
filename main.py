@@ -11,7 +11,7 @@ DEFAULT_MODEL_NAME = "gpt2"
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False, pretrained: bool = False, depth: Optional[int] = None):
+def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False, pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32):
     # Load a small dataset from hugging face
     dataset = load_dataset("wikitext", "wikitext-2-raw-v1") # ['squad_v2', 'sst2', 'snli', 'openwebtext', 'wikitext-2']
     print("dataset size:", len(dataset['train']))
@@ -61,8 +61,8 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     # Define training arguments and initialize Trainer
     training_args = TrainingArguments(
         output_dir="./results",
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=8,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=64,
         num_train_epochs=2,
         logging_dir='./logs',
         logging_steps=10,
@@ -95,4 +95,4 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     
 
 if __name__ == '__main__':
-    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4)
+    run(model_class_name='GPT2LMHeadModel', minimize_dataset=False, pretrained=False, depth=4)
