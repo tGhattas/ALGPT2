@@ -2,17 +2,19 @@ import os
 from typing import Optional
 from datasets import load_dataset
 from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config
+import evaluate
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
-import numpy as np
+import torch
+
+
+def compute_metrics(p):
+    loss = p.loss.mean().item()
+    perplexity = torch.exp(torch.tensor(loss))
+    return {"perplexity": perplexity}
 
 DEFAULT_MODEL_NAME = "gpt2"
 
-def compute_metrics(eval_pred):
-        predictions, labels = eval_pred
-        predictions = np.argmax(predictions, axis=1)
-        accuracy = np.mean(predictions == labels)
-        return {'accuracy': accuracy}
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -81,16 +83,11 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         args=training_args,
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
-        tokenizer=tokenizer,
-        compute_metrics=compute_metrics
+        tokenizer=tokenizer
     )
 
     # Start training
     trainer.train()
-
-    # Evaluate the model
-    result = trainer.evaluate()
-    pprint(result)
 
     # Check if Google Drive is mounted
     if os.path.isdir("/content/drive"):
@@ -100,6 +97,18 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     # Save the model
     trainer.save_model(f"{save_path}/save_{model_class_name}-{depth}")
     
+
+    # Evaluate the model
+    trainer_evaluation_result = trainer.evaluate()
+    # Compute perplexity
+    perplexity = evaluate.load("perplexity", module_type="metric")
+    input_texts = dataset['test']['text'][:100] if minimize_dataset else dataset['test']['text']
+    input_texts = [s for s in input_texts if s!='']
+    results = perplexity.compute(model_id=f"{save_path}/save_{model_class_name}-{depth}",
+                                predictions=input_texts)
+    trainer_evaluation_result['test_mean_perplexity'] = results['mean_perplexity']
+    pprint(trainer_evaluation_result)
+
 
 if __name__ == '__main__':
     run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4)
