@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Optional
 from datasets import load_dataset
@@ -25,7 +26,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     print("train dataset size:", len(dataset['train']))
     print("validation dataset size:", len(dataset['validation']))
     print("test dataset size:", len(dataset['test']))
-    
+
     # Load tokenizer and model
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
 
@@ -95,6 +96,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         save_path = "."
     # Save the model
     trainer.save_model(f"{save_path}/save_{model_class_name}-{depth}")
+
     
 
     # Evaluate the model
@@ -106,6 +108,9 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
                                 predictions=input_texts)
     trainer_evaluation_result['test_mean_perplexity'] = results['mean_perplexity']
     pprint(trainer_evaluation_result)
+    with open(f"{save_path}/save_{model_class_name}-{depth}/eval_results.json", 'w') as f:
+        json.dump(results, f)
+    
 
 
 if __name__ == '__main__':
