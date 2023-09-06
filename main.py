@@ -8,11 +8,6 @@ from modeling_algpt2 import ALGPT2LMHeadModel
 import torch
 
 
-def compute_metrics(p):
-    loss = p.loss.mean().item()
-    perplexity = torch.exp(torch.tensor(loss))
-    return {"perplexity": perplexity}
-
 DEFAULT_MODEL_NAME = "gpt2"
 
 
@@ -22,11 +17,15 @@ def count_parameters(model):
 def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False, pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32):
     # Load a small dataset from hugging face
     dataset = load_dataset("wikitext", "wikitext-2-raw-v1") # ['squad_v2', 'sst2', 'snli', 'openwebtext', 'wikitext-2']
-    print("dataset size:", len(dataset['train']))
+    
     if minimize_dataset:
         dataset['train'] = dataset['train'].select(range(100))
         dataset['validation'] = dataset['validation'].select(range(100))
-
+        dataset['test'] = dataset['test'].select(range(100))
+    print("train dataset size:", len(dataset['train']))
+    print("validation dataset size:", len(dataset['validation']))
+    print("test dataset size:", len(dataset['test']))
+    
     # Load tokenizer and model
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
 
@@ -102,8 +101,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     trainer_evaluation_result = trainer.evaluate()
     # Compute perplexity
     perplexity = evaluate.load("perplexity", module_type="metric")
-    input_texts = dataset['test']['text'][:100] if minimize_dataset else dataset['test']['text']
-    input_texts = [s for s in input_texts if s!='']
+    input_texts = [s for s in dataset['test']['text'] if s!='']
     results = perplexity.compute(model_id=f"{save_path}/save_{model_class_name}-{depth}",
                                 predictions=input_texts)
     trainer_evaluation_result['test_mean_perplexity'] = results['mean_perplexity']
