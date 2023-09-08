@@ -114,4 +114,4 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
 
 if __name__ == '__main__':
-    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4)
+    run(model_class_name='ALGPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4)
