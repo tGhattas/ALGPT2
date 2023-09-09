@@ -15,7 +15,7 @@ DEFAULT_MODEL_NAME = "gpt2"
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False, pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32):
+def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False, pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32, num_of_epochs: int = 10):
     # Load a small dataset from hugging face
     dataset = load_dataset("wikitext", "wikitext-2-raw-v1") # ['squad_v2', 'sst2', 'snli', 'openwebtext', 'wikitext-2']
     
@@ -71,11 +71,12 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         output_dir="./results",
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=64,
-        num_train_epochs=3,
+        num_train_epochs=num_of_epochs,
         logging_dir='./logs',
-        logging_steps=10,
+        logging_steps=100,
         save_steps=100000,
         eval_steps=100000,
+        learning_rate=1e-4,
     )
 
     trainer = Trainer(
