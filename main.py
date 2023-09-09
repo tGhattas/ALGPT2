@@ -76,7 +76,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         logging_steps=100,
         save_steps=100000,
         eval_steps=100000,
-        learning_rate=1e-4,
+        learning_rate=2e-5,
     )
 
     trainer = Trainer(
