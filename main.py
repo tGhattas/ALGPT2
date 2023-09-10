@@ -15,11 +15,24 @@ def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
+def evaluate_post_training(trainer: Trainer, dataset: dict, save_path: str, model_class_name: str, depth: int) -> dict:
+    # Evaluate the model
+    trainer_evaluation_result = trainer.evaluate()
+    # Compute perplexity
+    perplexity = evaluate.load("perplexity", module_type="metric")
+    input_texts = [s for s in dataset['test']['text'] if s != '']
+    results = perplexity.compute(model_id=f"{save_path}/save_{model_class_name}-{depth}",
+                                 predictions=input_texts)
+    trainer_evaluation_result['test_mean_perplexity'] = results['mean_perplexity']
+    pprint(trainer_evaluation_result)
+    return trainer_evaluation_result
+
+
 def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False,
         pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32, num_of_epochs: int = 10):
     # Load a small dataset from hugging face
     # ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
-    dataset = load_dataset("wikitext", "wikitext-103-raw-v1")
+    dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
 
     if minimize_dataset:
         dataset['train'] = dataset['train'].select(range(100))
@@ -78,9 +91,10 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         num_train_epochs=num_of_epochs,
         logging_dir='./logs',
         logging_steps=100,
-        save_steps=100000,
-        eval_steps=100000,
-        learning_rate=2e-5,
+        save_steps=50000,
+        learning_rate=1e-4,
+        evaluation_strategy='steps',
+        eval_steps=10000 if not minimize_dataset else 10,
     )
 
     trainer = Trainer(
@@ -88,7 +102,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         args=training_args,
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
-        tokenizer=tokenizer
+        tokenizer=tokenizer,
     )
 
     # Start training
@@ -101,19 +115,10 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         save_path = "."
     # Save the model
     trainer.save_model(f"{save_path}/save_{model_class_name}-{depth}")
-
-    # Evaluate the model
-    trainer_evaluation_result = trainer.evaluate()
-    # Compute perplexity
-    perplexity = evaluate.load("perplexity", module_type="metric")
-    input_texts = [s for s in dataset['test']['text'] if s != '']
-    results = perplexity.compute(model_id=f"{save_path}/save_{model_class_name}-{depth}",
-                                 predictions=input_texts)
-    trainer_evaluation_result['test_mean_perplexity'] = results['mean_perplexity']
-    pprint(trainer_evaluation_result)
+    trainer_evaluation_result = evaluate_post_training(trainer, dataset, save_path, model_class_name, depth)
     with open(f"{save_path}/save_{model_class_name}-{depth}/eval_results.json", 'w') as f:
         json.dump(trainer_evaluation_result, f)
 
 
 if __name__ == '__main__':
-    run(model_class_name='ALGPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4)
+    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4)
