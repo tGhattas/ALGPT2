@@ -8,20 +8,19 @@ from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
 import torch
 
-
 DEFAULT_MODEL_NAME = "gpt2"
 
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False, pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32, num_of_epochs: int = 10):
+
+def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False,
+        pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32, num_of_epochs: int = 10):
     # Load a small dataset from hugging face
-    # ['wikitext-2', 'wikitext-103']
-    # dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
+    # ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
     dataset = load_dataset("wikitext", "wikitext-103-raw-v1")
 
-    
     if minimize_dataset:
         dataset['train'] = dataset['train'].select(range(100))
         dataset['validation'] = dataset['validation'].select(range(100))
@@ -41,7 +40,8 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     if pretrained:
         model = model_class.from_pretrained(model_name)
     else:
-        config = GPT2Config(vocab_size=tokenizer.vocab_size) if depth is None else GPT2Config(vocab_size=tokenizer.vocab_size, n_layer=depth)
+        config = GPT2Config(vocab_size=tokenizer.vocab_size) if depth is None else GPT2Config(
+            vocab_size=tokenizer.vocab_size, n_layer=depth)
         model = model_class(config)
     print(model)
     print("number of parameters:", count_parameters(model))
@@ -49,18 +49,19 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     # Tokenize dataset
     def tokenize_function(examples):
         # Handle different datasets
-        if 'text' in examples:  
+        if 'text' in examples:
             return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=128)
         elif 'context' in examples and 'question' in examples:  # For datasets like 'squad_v2'
-            return tokenizer(examples['context'], examples['question'], padding="max_length", truncation=True, max_length=128)
+            return tokenizer(examples['context'], examples['question'], padding="max_length", truncation=True,
+                             max_length=128)
         elif 'premise' in examples and 'hypothesis' in examples:  # For datasets like 'snli'
-            return tokenizer(examples['premise'], examples['hypothesis'], padding="max_length", truncation=True, max_length=128)
+            return tokenizer(examples['premise'], examples['hypothesis'], padding="max_length", truncation=True,
+                             max_length=128)
         elif 'sentence' in examples:  # For datasets like 'sst2'
             return tokenizer(examples['sentence'], padding="max_length", truncation=True, max_length=128)
         else:
             raise ValueError("Dataset structure not recognized.")
-        
-        
+
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
     # Add labels for the language modeling task
@@ -101,20 +102,17 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     # Save the model
     trainer.save_model(f"{save_path}/save_{model_class_name}-{depth}")
 
-    
-
     # Evaluate the model
     trainer_evaluation_result = trainer.evaluate()
     # Compute perplexity
     perplexity = evaluate.load("perplexity", module_type="metric")
-    input_texts = [s for s in dataset['test']['text'] if s!='']
+    input_texts = [s for s in dataset['test']['text'] if s != '']
     results = perplexity.compute(model_id=f"{save_path}/save_{model_class_name}-{depth}",
-                                predictions=input_texts)
+                                 predictions=input_texts)
     trainer_evaluation_result['test_mean_perplexity'] = results['mean_perplexity']
     pprint(trainer_evaluation_result)
     with open(f"{save_path}/save_{model_class_name}-{depth}/eval_results.json", 'w') as f:
         json.dump(trainer_evaluation_result, f)
-    
 
 
 if __name__ == '__main__':
