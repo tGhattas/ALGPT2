@@ -32,7 +32,8 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32, num_of_epochs: int = 10):
     # Load a small dataset from hugging face
     # ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
-    dataset = load_dataset("wikitext", "wikitext-103-raw-v1")
+    dataset_path = "wikitext-103-raw-v1" if not minimize_dataset else "wikitext-2-raw-v1"
+    dataset = load_dataset("wikitext", dataset_path)
 
     if minimize_dataset:
         dataset['train'] = dataset['train'].select(range(100))
@@ -121,4 +122,4 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
 
 if __name__ == '__main__':
-    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4)
+    run(model_class_name='ALGPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4)
