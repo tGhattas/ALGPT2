@@ -32,7 +32,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32, num_of_epochs: int = 10):
     # Load a small dataset from hugging face
     # ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
-    dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
+    dataset = load_dataset("wikitext", "wikitext-103-raw-v1")
 
     if minimize_dataset:
         dataset['train'] = dataset['train'].select(range(100))
