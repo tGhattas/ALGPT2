@@ -38,7 +38,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     # Load a small dataset from hugging face
     # ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
     dataset_path = "wikitext-103-raw-v1" if not minimize_dataset else "wikitext-2-raw-v1"
-    dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
+    dataset = load_dataset("wikitext", dataset_path)
 
     if minimize_dataset:
         dataset['train'] = dataset['train'].select(range(100))
@@ -114,7 +114,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     )
 
     # Start training
-    trainer.train(resume_from_checkpoint=f"{save_path}/save_{model_class_name}-{depth}") if load_checkpoint else trainer.train()
+    trainer.train(resume_from_checkpoint=f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}") if load_checkpoint else trainer.train()
 
 
     # Save the model
