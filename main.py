@@ -10,6 +10,11 @@ import torch
 
 DEFAULT_MODEL_NAME = "gpt2"
 
+# Check if Google Drive is mounted
+if os.path.isdir("/content/drive"):
+    save_path = "/content/drive/MyDrive/Colab\ Notebooks/AL-GPT"
+else:
+    save_path = "."
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -29,7 +34,7 @@ def evaluate_post_training(trainer: Trainer, dataset: dict, save_path: str, mode
 
 
 def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False,
-        pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32, num_of_epochs: int = 10):
+        pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32, num_of_epochs: int = 10, load_checkpoint: bool = False):
     # Load a small dataset from hugging face
     # ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
     dataset_path = "wikitext-103-raw-v1" if not minimize_dataset else "wikitext-2-raw-v1"
@@ -85,6 +90,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     model.config.is_decoder = True
 
     # Define training arguments and initialize Trainer
+
     training_args = TrainingArguments(
         output_dir="./results",
         per_device_train_batch_size=batch_size,
@@ -104,16 +110,13 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
         tokenizer=tokenizer,
+
     )
 
     # Start training
-    trainer.train()
+    trainer.train(resume_from_checkpoint=f"{save_path}/save_{model_class_name}-{depth}") if load_checkpoint else trainer.train()
 
-    # Check if Google Drive is mounted
-    if os.path.isdir("/content/drive"):
-        save_path = "/content/drive/MyDrive/Colab\ Notebooks/AL-GPT"
-    else:
-        save_path = "."
+
     # Save the model
     trainer.save_model(f"{save_path}/save_{model_class_name}-{depth}")
     trainer_evaluation_result = evaluate_post_training(trainer, dataset, save_path, model_class_name, depth)
@@ -122,4 +125,4 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
 
 if __name__ == '__main__':
-    run(model_class_name='ALGPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4)
+    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4, load_checkpoint=True)
