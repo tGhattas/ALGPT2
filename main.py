@@ -114,7 +114,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     )
 
     # Start training
-    trainer.train(resume_from_checkpoint=f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}") if load_checkpoint else trainer.train()
+    trainer.train(resume_from_checkpoint=f"{save_path}/save_{model_class_name}-{depth}") if load_checkpoint else trainer.train()
 
 
     # Save the model
