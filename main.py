@@ -34,10 +34,11 @@ def evaluate_post_training(trainer: Trainer, dataset: dict, save_path: str, mode
 
 
 def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False,
-        pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32, num_of_epochs: int = 10, load_checkpoint: bool = False):
+        pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32,
+        num_of_epochs: int = 10, load_checkpoint: bool = False, dataset_path: str = "wikitext-103-raw-v1"):
     # Load a small dataset from hugging face
-    # ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
-    dataset_path = "wikitext-103-raw-v1" if not minimize_dataset else "wikitext-2-raw-v1"
+    assert dataset_path in ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
+    dataset_path = dataset_path if not minimize_dataset else "wikitext-2-raw-v1"
     dataset = load_dataset("wikitext", dataset_path)
 
     if minimize_dataset:
@@ -126,4 +127,5 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
 
 if __name__ == '__main__':
-    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4, load_checkpoint=False)
+    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4, load_checkpoint=False,
+        dataset_path="wikitext-2-raw-v1")
