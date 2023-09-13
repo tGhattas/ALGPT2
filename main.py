@@ -113,16 +113,17 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
     )
 
+    full_path = f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}"
     # Start training
-    trainer.train(resume_from_checkpoint=f"{save_path}/save_{model_class_name}-{depth}") if load_checkpoint else trainer.train()
+    trainer.train(resume_from_checkpoint=full_path) if load_checkpoint else trainer.train()
 
 
     # Save the model
-    trainer.save_model(f"{save_path}/save_{model_class_name}-{depth}")
+    trainer.save_model(full_path)
     trainer_evaluation_result = evaluate_post_training(trainer, dataset, save_path, model_class_name, depth)
-    with open(f"{save_path}/save_{model_class_name}-{depth}/eval_results.json", 'w') as f:
+    with open(f"{full_path}/eval_results.json", 'w') as f:
         json.dump(trainer_evaluation_result, f)
 
 
 if __name__ == '__main__':
-    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4, load_checkpoint=True)
+    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4, load_checkpoint=False)
