@@ -35,7 +35,8 @@ def evaluate_post_training(trainer: Trainer, dataset: dict, save_path: str, mode
 
 def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False,
         pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32,
-        num_of_epochs: int = 10, load_checkpoint: bool = False, dataset_path: str = "wikitext-103-raw-v1"):
+        num_of_epochs: int = 10, load_checkpoint: bool = False, dataset_path: str = "wikitext-103-raw-v1",
+        sequence_max_length: int = 512):
     # Load a small dataset from hugging face
     assert dataset_path in ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
     dataset_path = dataset_path if not minimize_dataset else "wikitext-2-raw-v1"
@@ -70,15 +71,15 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     def tokenize_function(examples):
         # Handle different datasets
         if 'text' in examples:
-            return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=128)
+            return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=sequence_max_length)
         elif 'context' in examples and 'question' in examples:  # For datasets like 'squad_v2'
             return tokenizer(examples['context'], examples['question'], padding="max_length", truncation=True,
-                             max_length=128)
+                             max_length=sequence_max_length)
         elif 'premise' in examples and 'hypothesis' in examples:  # For datasets like 'snli'
             return tokenizer(examples['premise'], examples['hypothesis'], padding="max_length", truncation=True,
-                             max_length=128)
+                             max_length=sequence_max_length)
         elif 'sentence' in examples:  # For datasets like 'sst2'
-            return tokenizer(examples['sentence'], padding="max_length", truncation=True, max_length=128)
+            return tokenizer(examples['sentence'], padding="max_length", truncation=True, max_length=sequence_max_length)
         else:
             raise ValueError("Dataset structure not recognized.")
 
