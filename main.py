@@ -122,7 +122,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
     # Save the model
     trainer.save_model(full_path)
-    trainer_evaluation_result = evaluate_post_training(trainer, dataset, full_path, model_class_name, depth)
+    trainer_evaluation_result = evaluate_post_training(trainer, dataset, full_path)
     with open(f"{full_path}/eval_results.json", 'w') as f:
         json.dump(trainer_evaluation_result, f)
 
