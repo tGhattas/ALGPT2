@@ -20,7 +20,7 @@ def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-def evaluate_post_training(trainer: Trainer, dataset: dict, save_path: str, model_class_name: str, depth: int) -> dict:
+def evaluate_post_training(trainer: Trainer, dataset: dict, save_path: str) -> dict:
     # Evaluate the model
     trainer_evaluation_result = trainer.evaluate()
     # Compute perplexity
@@ -128,6 +128,6 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
 
 if __name__ == '__main__':
-    run(model_class_name='GPT2LMHeadModel', minimize_dataset=False, pretrained=False, depth=3, load_checkpoint=False,
+    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=3, load_checkpoint=False,
         num_of_epochs=0.5,
         dataset_path="wikitext-2-raw-v1")
