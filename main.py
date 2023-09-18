@@ -35,8 +35,8 @@ def evaluate_post_training(trainer: Trainer, dataset: dict, save_path: str, mode
 
 def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False,
         pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32,
-        num_of_epochs: int = 10, load_checkpoint: bool = False, dataset_path: str = "wikitext-103-raw-v1",
-        sequence_max_length: int = 512):
+        num_of_epochs: float = 1.0, load_checkpoint: bool = False, dataset_path: str = "wikitext-103-raw-v1",
+        sequence_max_length: int = 512, learning_rate: float = 1e-5):
     # Load a small dataset from hugging face
     assert dataset_path in ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
     dataset_path = dataset_path if not minimize_dataset else "wikitext-2-raw-v1"
@@ -101,7 +101,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         logging_dir='./logs',
         logging_steps=100,
         save_steps=50000,
-        learning_rate=1e-4,
+        learning_rate=learning_rate,
         evaluation_strategy='steps',
         eval_steps=10000 if not minimize_dataset else 10,
     )
@@ -128,5 +128,6 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
 
 if __name__ == '__main__':
-    run(model_class_name='GPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=4, load_checkpoint=False,
+    run(model_class_name='GPT2LMHeadModel', minimize_dataset=False, pretrained=False, depth=3, load_checkpoint=False,
+        num_of_epochs=0.5,
         dataset_path="wikitext-2-raw-v1")
