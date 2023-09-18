@@ -1,7 +1,7 @@
 import json
 import os
 from typing import Optional
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config
 import evaluate
 from pprint import pprint
@@ -83,13 +83,21 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         else:
             raise ValueError("Dataset structure not recognized.")
 
-    tokenized_datasets = dataset.map(tokenize_function, batched=True)
+    tokenized_datasets_path = f"{save_path}/tokenized_datasets/{dataset_path}"
 
-    # Add labels for the language modeling task
-    tokenized_datasets = tokenized_datasets.map(lambda examples: {'labels': examples['input_ids']}, batched=True)
-
-    # Update model configuration
-    model.config.is_decoder = True
+    if os.path.exists(tokenized_datasets_path):
+        # Load tokenized_datasets from disk
+        print("Loading tokenized_datasets from disk...")
+        tokenized_datasets = load_from_disk(tokenized_datasets_path)
+    else:
+        # Tokenize dataset
+        tokenized_datasets = dataset.map(tokenize_function, batched=True)
+        # Add labels for the language modeling task
+        tokenized_datasets = tokenized_datasets.map(lambda examples: {'labels': examples['input_ids']}, batched=True)
+        # Save tokenized_datasets to disk
+        tokenized_datasets.save_to_disk(tokenized_datasets_path)
+        # Update model configuration
+        model.config.is_decoder = True
 
     # Define training arguments and initialize Trainer
 
