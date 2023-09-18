@@ -26,7 +26,7 @@ def evaluate_post_training(trainer: Trainer, dataset: dict, save_path: str, mode
     # Compute perplexity
     perplexity = evaluate.load("perplexity", module_type="metric")
     input_texts = [s for s in dataset['test']['text'] if s != '']
-    results = perplexity.compute(model_id=f"{save_path}/save_{model_class_name}-{depth}",
+    results = perplexity.compute(model_id=save_path,
                                  predictions=input_texts)
     trainer_evaluation_result['test_mean_perplexity'] = results['mean_perplexity']
     pprint(trainer_evaluation_result)
@@ -122,7 +122,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
     # Save the model
     trainer.save_model(full_path)
-    trainer_evaluation_result = evaluate_post_training(trainer, dataset, save_path, model_class_name, depth)
+    trainer_evaluation_result = evaluate_post_training(trainer, dataset, full_path, model_class_name, depth)
     with open(f"{full_path}/eval_results.json", 'w') as f:
         json.dump(trainer_evaluation_result, f)
 
