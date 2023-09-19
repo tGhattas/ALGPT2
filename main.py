@@ -6,7 +6,6 @@ from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadMo
 import evaluate
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
-import torch
 
 DEFAULT_MODEL_NAME = "gpt2"
 
@@ -36,9 +35,16 @@ def evaluate_post_training(trainer: Trainer, dataset: dict, save_path: str) -> d
 def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False,
         pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32,
         num_of_epochs: float = 1.0, load_checkpoint: bool = False, dataset_path: str = "wikitext-103-raw-v1",
-        sequence_max_length: int = 512, learning_rate: float = 1e-5):
+        sequence_max_length: int = 512, learning_rate: float = 1e-5, device="gpu"):
     # Load a small dataset from hugging face
+    assert device.lower() in ["gpu", "tpu", "cpu"]
     assert dataset_path in ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
+    if device.lower() == "tpu":
+        import torch_xla.core.xla_model as xm
+        device = xm.xla_device()
+        print("Using TPU...")
+
+
     dataset_path = dataset_path if not minimize_dataset else "wikitext-2-raw-v1"
     dataset = load_dataset("wikitext", dataset_path)
 
@@ -115,12 +121,12 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     )
 
     trainer = Trainer(
-        model=model,
+        model=model if device.lower() != "tpu" else model.to(device),
         args=training_args,
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
         tokenizer=tokenizer,
-
+        callbacks=[xm.callbacks.ProgressBar()] if device.lower() == "tpu" else None
     )
 
     full_path = f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}"
