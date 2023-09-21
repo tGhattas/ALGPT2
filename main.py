@@ -1,5 +1,6 @@
 import json
 import os
+import random
 from typing import Optional
 from datasets import load_dataset, load_from_disk
 from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config
@@ -39,10 +40,6 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     # Load a small dataset from hugging face
     assert device.lower() in ["gpu", "tpu", "cpu"]
     assert dataset_path in ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
-    if device.lower() == "tpu":
-        import torch_xla.core.xla_model as xm
-        device = xm.xla_device()
-        print("Using TPU...")
 
 
     dataset_path = dataset_path if not minimize_dataset else "wikitext-2-raw-v1"
@@ -105,6 +102,9 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         # Update model configuration
         model.config.is_decoder = True
 
+    # shuffle the training dataset
+    tokenized_datasets = tokenized_datasets.shuffle(seed=random.randint(0, 100))
+        
     # Define training arguments and initialize Trainer
 
     training_args = TrainingArguments(
@@ -126,8 +126,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         args=training_args,
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
-        tokenizer=tokenizer,
-        callbacks=[xm.callbacks.ProgressBar()] if device.lower() == "tpu" else None
+        tokenizer=tokenizer
     )
 
     full_path = f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}"
