@@ -36,7 +36,7 @@ def evaluate_post_training(trainer: Trainer, dataset: dict, save_path: str) -> d
 def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False,
         pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32,
         num_of_epochs: float = 1.0, load_checkpoint: bool = False, dataset_path: str = "wikitext-103-raw-v1",
-        sequence_max_length: int = 512, learning_rate: float = 1e-5, device="gpu"):
+        sequence_max_length: int = 512, learning_rate: float = 1e-5, device="gpu", save_steps: int = 10000):
     # Load a small dataset from hugging face
     assert device.lower() in ["gpu", "tpu", "cpu"]
     assert dataset_path in ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
@@ -115,10 +115,10 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         logging_dir='./logs',
         logging_steps=100,
         save_strategy='steps',
-        save_steps=10000 if not minimize_dataset else 10,
+        save_steps=save_steps if not minimize_dataset else 10,
         learning_rate=learning_rate,
         evaluation_strategy='steps',
-        eval_steps=10000 if not minimize_dataset else 10,
+        eval_steps=save_steps if not minimize_dataset else 10,
     )
 
     trainer = Trainer(
