@@ -118,7 +118,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         
     # Define training arguments and initialize Trainer
 
-    wandb.init(project="AL-GPT", entity="al-gpt", name="AL-GPT", config={
+    wandb.init(project="AL-GPT", entity="AL-GPT", name="AL-GPT", config={
         "model_class_name": model_class_name,
         "model_name": model_name,
         "minimize_dataset": minimize_dataset,
