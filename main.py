@@ -11,7 +11,7 @@ from modeling_algpt2 import ALGPT2LMHeadModel
 
 DEFAULT_MODEL_NAME = "gpt2"
 
-wandb.login()
+# wandb.login()
 
 class WandBCustomCallback(TrainerCallback):
     def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
@@ -118,21 +118,21 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         
     # Define training arguments and initialize Trainer
 
-    wandb.init(project="AL-GPT", entity="AL-GPT", name="AL-GPT", config={
-        "model_class_name": model_class_name,
-        "model_name": model_name,
-        "minimize_dataset": minimize_dataset,
-        "pretrained": pretrained,
-        "depth": depth,
-        "batch_size": batch_size,
-        "num_of_epochs": num_of_epochs,
-        "load_checkpoint": load_checkpoint,
-        "dataset_path": dataset_path,
-        "sequence_max_length": sequence_max_length,
-        "learning_rate": learning_rate,
-        "device": device,
-        "save_steps": save_steps
-    })
+    # wandb.init(project="AL-GPT", entity="AL-GPT", name="AL-GPT", config={
+    #     "model_class_name": model_class_name,
+    #     "model_name": model_name,
+    #     "minimize_dataset": minimize_dataset,
+    #     "pretrained": pretrained,
+    #     "depth": depth,
+    #     "batch_size": batch_size,
+    #     "num_of_epochs": num_of_epochs,
+    #     "load_checkpoint": load_checkpoint,
+    #     "dataset_path": dataset_path,
+    #     "sequence_max_length": sequence_max_length,
+    #     "learning_rate": learning_rate,
+    #     "device": device,
+    #     "save_steps": save_steps
+    # })
 
     training_args = TrainingArguments(
         output_dir="./results",
@@ -156,7 +156,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
         tokenizer=tokenizer,
-        callbacks=[WandBCustomCallback()],
+        # callbacks=[WandBCustomCallback()],
     )
 
     full_path = f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}"
@@ -170,7 +170,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     with open(f"{full_path}/eval_results.json", 'w') as f:
         json.dump(trainer_evaluation_result, f)
     
-    wandb.finish()
+    # wandb.finish()
 
 
 if __name__ == '__main__':
