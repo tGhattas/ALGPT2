@@ -1,14 +1,25 @@
 import json
 import os
 import random
+import wandb
 from typing import Optional
 from datasets import load_dataset, load_from_disk
-from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config
+from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config, TrainerCallback, TrainerState, TrainerControl
 import evaluate
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
 
 DEFAULT_MODEL_NAME = "gpt2"
+
+wandb.login()
+
+class WandBCustomCallback(TrainerCallback):
+    def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        # Here you can access the logs, which typically include metrics like 'train_loss', 'learning_rate', etc.
+        logs = kwargs['logs']
+        loss = logs.get('loss', None)
+        # Log them to WandB
+        wandb.log({ "loss": loss})
 
 # Check if Google Drive is mounted
 if os.path.isdir("/content/drive"):
@@ -107,6 +118,22 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         
     # Define training arguments and initialize Trainer
 
+    wandb.init(project="AL-GPT", entity="al-gpt", name="AL-GPT", config={
+        "model_class_name": model_class_name,
+        "model_name": model_name,
+        "minimize_dataset": minimize_dataset,
+        "pretrained": pretrained,
+        "depth": depth,
+        "batch_size": batch_size,
+        "num_of_epochs": num_of_epochs,
+        "load_checkpoint": load_checkpoint,
+        "dataset_path": dataset_path,
+        "sequence_max_length": sequence_max_length,
+        "learning_rate": learning_rate,
+        "device": device,
+        "save_steps": save_steps
+    })
+
     training_args = TrainingArguments(
         output_dir="./results",
         per_device_train_batch_size=batch_size,
@@ -128,7 +155,8 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         args=training_args,
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
-        tokenizer=tokenizer
+        tokenizer=tokenizer,
+        callbacks=[WandBCustomCallback()],
     )
 
     full_path = f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}"
@@ -141,6 +169,8 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     trainer_evaluation_result = evaluate_post_training(trainer, dataset, full_path)
     with open(f"{full_path}/eval_results.json", 'w') as f:
         json.dump(trainer_evaluation_result, f)
+    
+    wandb.finish()
 
 
 if __name__ == '__main__':
