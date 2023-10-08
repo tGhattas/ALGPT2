@@ -160,9 +160,6 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
     full_path = f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}"
     # Start training
-    if load_checkpoint:
-       for param_group in trainer.optimizer.param_groups:
-            param_group['lr'] = learning_rate 
     trainer.train(resume_from_checkpoint=full_path) if load_checkpoint else trainer.train()
     
 
