@@ -23,18 +23,20 @@ class WandBCustomCallback(TrainerCallback):
         wandb.log({ "loss": loss})
 
 class PerplexityCallback(TrainerCallback):
-    def on_evaluate(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-        # Access the logs, which should contain 'eval_loss'
-        logs = kwargs['logs']
-        if 'eval_loss' in logs:
-            # Calculate perplexity from the eval loss and add it to logs
-            logs['eval_perplexity'] = math.exp(logs['eval_loss'])
+    def on_evaluate(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, metrics=None, **kwargs):
+        if metrics is None:
+            metrics = {}
+        if 'eval_loss' in metrics:
+            # Calculate perplexity from the eval loss and add it to metrics
+            metrics['eval_perplexity'] = math.exp(metrics['eval_loss'])
+        
     def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
         # Access the logs, which should contain 'loss'
         logs = kwargs['logs']
         if 'loss' in logs:
             # Calculate perplexity from the train loss and add it to logs
             logs['train_perplexity'] = math.exp(logs['loss'])
+        
 
 # Check if Google Drive is mounted
 if os.path.isdir("/content/drive"):
