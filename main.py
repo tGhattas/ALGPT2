@@ -5,7 +5,6 @@ import wandb
 from typing import Optional
 from datasets import load_dataset, load_from_disk
 from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config, TrainerCallback, TrainerState, TrainerControl
-import evaluate
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
 import math
@@ -29,6 +28,7 @@ class PerplexityCallback(TrainerCallback):
         if 'eval_loss' in metrics:
             # Calculate perplexity from the eval loss and add it to metrics
             metrics['eval_perplexity'] = math.exp(metrics['eval_loss'])
+            
         
     def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
         # Access the logs, which should contain 'loss'
@@ -48,15 +48,11 @@ def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-def evaluate_post_training(trainer: Trainer, dataset: dict, save_path: str) -> dict:
+def evaluate_post_training(trainer: Trainer, dataset: dict) -> dict:
     # Evaluate the model
-    trainer_evaluation_result = trainer.evaluate()
+    trainer_evaluation_result = trainer.evaluate(dataset=dataset['test'])
     # Compute perplexity
-    perplexity = evaluate.load("perplexity", module_type="metric")
-    input_texts = [s for s in dataset['test']['text'] if s != '']
-    results = perplexity.compute(model_id=save_path,
-                                 predictions=input_texts)
-    trainer_evaluation_result['test_mean_perplexity'] = results['mean_perplexity']
+    trainer_evaluation_result['test_mean_perplexity'] = math.exp(trainer_evaluation_result['eval_loss'])
     pprint(trainer_evaluation_result)
     return trainer_evaluation_result
 
@@ -178,12 +174,15 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
     full_path = f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}"
     # Start training
+    if load_checkpoint:
+       for param_group in trainer.optimizer.param_groups:
+            param_group['lr'] = learning_rate 
     trainer.train(resume_from_checkpoint=full_path) if load_checkpoint else trainer.train()
-
+    
 
     # Save the model
     trainer.save_model(full_path)
-    trainer_evaluation_result = evaluate_post_training(trainer, dataset, full_path)
+    trainer_evaluation_result = evaluate_post_training(trainer, dataset)
     with open(f"{full_path}/eval_results.json", 'w') as f:
         json.dump(trainer_evaluation_result, f)
     
