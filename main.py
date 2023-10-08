@@ -118,7 +118,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     if os.path.exists(tokenized_datasets_path):
         # Load tokenized_datasets from disk
         print("Loading tokenized_datasets from disk...")
-        tokenized_datasets = load_from_disk(tokenized_datasets_path)
+        tokenized_datasets = load_from_disk(tokenized_datasets_path, keep_in_memory=True)
     else:
         # Tokenize dataset
         tokenized_datasets = dataset.map(tokenize_function, batched=True)
