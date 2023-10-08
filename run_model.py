@@ -17,6 +17,7 @@ if __name__ == '__main__':
     parser.add_argument("--learning_rate", type=float, default=1e-5, help="Learning rate for training.")
     parser.add_argument("--device", type=str, default="gpu", choices=["gpu", "cpu"], help="Device to run on.")
     parser.add_argument("--save_steps", type=int, default=10000, help="Steps interval to save the model.")
+    parser.add_argument("--tokenizer_path", type=str, default="wikitext-103-raw-v1", help="Path to the tokenizer.")
 
     args = parser.parse_args()
 
@@ -32,4 +33,5 @@ if __name__ == '__main__':
         sequence_max_length=args.sequence_max_length,
         learning_rate=args.learning_rate,
         device=args.device,
-        save_steps=args.save_steps)
+        save_steps=args.save_steps,
+        tokenizer_path=args.tokenizer_path)
