@@ -8,6 +8,7 @@ from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadMo
 import evaluate
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
+import math
 
 DEFAULT_MODEL_NAME = "gpt2"
 
@@ -20,6 +21,20 @@ class WandBCustomCallback(TrainerCallback):
         loss = logs.get('loss', None)
         # Log them to WandB
         wandb.log({ "loss": loss})
+
+class PerplexityCallback(TrainerCallback):
+    def on_evaluate(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        # Access the logs, which should contain 'eval_loss'
+        logs = kwargs['logs']
+        if 'eval_loss' in logs:
+            # Calculate perplexity from the eval loss and add it to logs
+            logs['eval_perplexity'] = math.exp(logs['eval_loss'])
+    def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        # Access the logs, which should contain 'loss'
+        logs = kwargs['logs']
+        if 'loss' in logs:
+            # Calculate perplexity from the train loss and add it to logs
+            logs['train_perplexity'] = math.exp(logs['loss'])
 
 # Check if Google Drive is mounted
 if os.path.isdir("/content/drive"):
