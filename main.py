@@ -160,7 +160,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         save_steps=save_steps if not minimize_dataset else 10,
         learning_rate=learning_rate,
         evaluation_strategy='steps',
-        eval_steps=save_steps if not minimize_dataset else 10,
+        eval_steps=1000 if not minimize_dataset else 10,
         warmup_steps=1000,
         weight_decay=0.01,
     )
