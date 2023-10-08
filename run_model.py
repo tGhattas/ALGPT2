@@ -4,7 +4,7 @@ import argparse
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Run the model with specified parameters.")
         
-    parser.add_argument("model_class_name", type=str, help="Name of the model class.")
+    parser.add_argument("--model_class_name", type=str, help="Name of the model class.")
     parser.add_argument("--model_name", type=str, default=DEFAULT_MODEL_NAME, help="Name of the model.")
     parser.add_argument("--minimize_dataset", action="store_true", help="Minimize the dataset.")
     parser.add_argument("--pretrained", action="store_true", help="Use pretrained model.")
