@@ -4,15 +4,12 @@ import random
 import wandb
 from typing import Optional
 from datasets import load_dataset, load_from_disk
-from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config, TrainerCallback, TrainerState, TrainerControl
+from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config, TrainerCallback, TrainerState, TrainerControl, PreTrainedTokenizerFast
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
 import math
-import argparse
 
 DEFAULT_MODEL_NAME = "gpt2"
-
-# wandb.login()
 
 class WandBCustomCallback(TrainerCallback):
     def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
@@ -61,7 +58,8 @@ def evaluate_post_training(trainer: Trainer, dataset: dict) -> dict:
 def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False,
         pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32,
         num_of_epochs: float = 1.0, load_checkpoint: bool = False, dataset_path: str = "wikitext-103-raw-v1",
-        sequence_max_length: int = 512, learning_rate: float = 1e-5, device="gpu", save_steps: int = 10000):
+        sequence_max_length: int = 512, learning_rate: float = 1e-5, device="gpu", save_steps: int = 10000,
+        tokenizer_path: Optional[str] = None):
     # Load a small dataset from hugging face
     assert device.lower() in ["gpu", "tpu", "cpu"]
     assert dataset_path in ['wikitext-2-raw-v1', 'wikitext-103-raw-v1']
@@ -79,7 +77,11 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     print("test dataset size:", len(dataset['test']))
 
     # Load tokenizer and model
-    tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+    if tokenizer_path is not None:
+        tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+    else:
+        tokenizer = PreTrainedTokenizerFast(tokenizer_file=f"{save_path}/tokenizer/{tokenizer_path}_tokenizer.json",)
+    
 
     # Set the padding token for the tokenizer
     if tokenizer.pad_token is None:
@@ -130,23 +132,6 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     # shuffle the training dataset
     tokenized_datasets = tokenized_datasets.shuffle(seed=random.randint(0, 100))
         
-    # Define training arguments and initialize Trainer
-
-    # wandb.init(project="AL-GPT", entity="AL-GPT", name="AL-GPT", config={
-    #     "model_class_name": model_class_name,
-    #     "model_name": model_name,
-    #     "minimize_dataset": minimize_dataset,
-    #     "pretrained": pretrained,
-    #     "depth": depth,
-    #     "batch_size": batch_size,
-    #     "num_of_epochs": num_of_epochs,
-    #     "load_checkpoint": load_checkpoint,
-    #     "dataset_path": dataset_path,
-    #     "sequence_max_length": sequence_max_length,
-    #     "learning_rate": learning_rate,
-    #     "device": device,
-    #     "save_steps": save_steps
-    # })
 
     training_args = TrainingArguments(
         output_dir="./results",
@@ -187,7 +172,6 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     with open(f"{full_path}/eval_results.json", 'w') as f:
         json.dump(trainer_evaluation_result, f)
     
-    # wandb.finish()
 
 
 if __name__ == '__main__':
