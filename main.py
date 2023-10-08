@@ -171,7 +171,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
         tokenizer=tokenizer,
-        # callbacks=[WandBCustomCallback()],
+        callbacks=[PerplexityCallback()],
     )
 
     full_path = f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}"
