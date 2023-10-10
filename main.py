@@ -5,7 +5,7 @@ import wandb
 from typing import Optional
 from datasets import load_dataset, load_from_disk
 from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config, TrainerCallback, \
-    TrainerState, TrainerControl, PreTrainedTokenizerFast, BertLMHeadModel, BertConfig
+    TrainerState, TrainerControl, PreTrainedTokenizerFast, BertLMHeadModel, BertConfig, BertTokenizerFast
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
 import math
@@ -73,7 +73,8 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
     # Load tokenizer and model
     if tokenizer_path is not None:
-        tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+        tokenizer_object = BertTokenizerFast if model_class_name == 'BertLMHeadModel' else GPT2Tokenizer
+        tokenizer = tokenizer_object.from_pretrained(model_name)
     else:
         tokenizer = PreTrainedTokenizerFast(tokenizer_file=f"{save_path}/tokenizer/{tokenizer_path}_tokenizer.json", )
 
