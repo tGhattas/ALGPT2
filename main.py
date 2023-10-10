@@ -5,7 +5,7 @@ import wandb
 from typing import Optional
 from datasets import load_dataset, load_from_disk
 from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config, TrainerCallback, \
-    TrainerState, TrainerControl, PreTrainedTokenizerFast, BertLMHeadModel
+    TrainerState, TrainerControl, PreTrainedTokenizerFast, BertLMHeadModel, BertConfig
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
 import math
@@ -84,10 +84,13 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     model_class = {'GPT2LMHeadModel': GPT2LMHeadModel,
                    'ALGPT2LMHeadModel': ALGPT2LMHeadModel,
                    'BertLMHeadModel': BertLMHeadModel}[model_class_name]
+    model_config = {'GPT2LMHeadModel': GPT2Config,
+                    'ALGPT2LMHeadModel': GPT2Config,
+                    'BertLMHeadModel': BertConfig}[model_class_name]
     if pretrained:
         model = model_class.from_pretrained(model_name)
     else:
-        config = GPT2Config(vocab_size=tokenizer.vocab_size) if depth is None else GPT2Config(
+        config = model_config(vocab_size=tokenizer.vocab_size) if depth is None else GPT2Config(
             vocab_size=tokenizer.vocab_size, n_layer=depth)
         model = model_class(config)
     print(model)
