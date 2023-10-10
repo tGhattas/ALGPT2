@@ -5,7 +5,7 @@ import wandb
 from typing import Optional
 from datasets import load_dataset, load_from_disk
 from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config, TrainerCallback, \
-    TrainerState, TrainerControl, PreTrainedTokenizerFast
+    TrainerState, TrainerControl, PreTrainedTokenizerFast, BertLMHeadModel
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
 import math
@@ -81,7 +81,9 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    model_class = {'GPT2LMHeadModel': GPT2LMHeadModel, 'ALGPT2LMHeadModel': ALGPT2LMHeadModel}[model_class_name]
+    model_class = {'GPT2LMHeadModel': GPT2LMHeadModel,
+                   'ALGPT2LMHeadModel': ALGPT2LMHeadModel,
+                   'BertLMHeadModel': BertLMHeadModel}[model_class_name]
     if pretrained:
         model = model_class.from_pretrained(model_name)
     else:
@@ -115,7 +117,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         tokenized_datasets.save_to_disk(tokenized_datasets_path)
 
     # shuffle the training dataset
-    tokenized_datasets = tokenized_datasets.shuffle(seed=random.randint(0, 100))
+    # tokenized_datasets = tokenized_datasets.shuffle(seed=random.randint(0, 100))
 
     training_args = TrainingArguments(
         output_dir="./results",
