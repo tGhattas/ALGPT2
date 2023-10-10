@@ -86,8 +86,8 @@ def _check_tokenizer(dataset_path: str = "wikitext-2-raw-v1"):
 
 
 if __name__ == '__main__':
-    _check_tokenizer()
-    # parser = argparse.ArgumentParser(description="Run the tokenizer training.")
-    # parser.add_argument("--dataset_path", type=str, default="wikitext-103-raw-v1", help="Path to the dataset.")
-    # args = parser.parse_args()
-    # run_tokenizer_training(args.dataset_path)
+    # _check_tokenizer()
+    parser = argparse.ArgumentParser(description="Run the tokenizer training.")
+    parser.add_argument("--dataset_path", type=str, default="wikitext-103-raw-v1", help="Path to the dataset.")
+    args = parser.parse_args()
+    run_tokenizer_training(args.dataset_path)

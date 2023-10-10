@@ -11,13 +11,6 @@ import math
 
 DEFAULT_MODEL_NAME = "gpt2"
 
-class WandBCustomCallback(TrainerCallback):
-    def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-        # Here you can access the logs, which typically include metrics like 'train_loss', 'learning_rate', etc.
-        logs = kwargs['logs']
-        loss = logs.get('loss', None)
-        # Log them to WandB
-        wandb.log({ "loss": loss})
 
 class PerplexityCallback(TrainerCallback):
     def on_evaluate(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, metrics=None, **kwargs):
@@ -34,6 +27,7 @@ class PerplexityCallback(TrainerCallback):
         if 'loss' in logs:
             # Calculate perplexity from the train loss and add it to logs
             logs['train_perplexity'] = math.exp(logs['loss'])
+            wandb.log(logs)
         
 
 # Check if Google Drive is mounted
@@ -48,7 +42,7 @@ def count_parameters(model):
 
 def evaluate_post_training(trainer: Trainer, dataset: dict) -> dict:
     # Evaluate the model
-    trainer_evaluation_result = trainer.evaluate(dataset=dataset['test'])
+    trainer_evaluation_result = trainer.evaluate(eval_dataset=dataset['test'])
     # Compute perplexity
     trainer_evaluation_result['test_mean_perplexity'] = math.exp(trainer_evaluation_result['eval_loss'])
     pprint(trainer_evaluation_result)
@@ -150,7 +144,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     )
 
     trainer = Trainer(
-        model=model if device.lower() != "tpu" else model.to(device),
+        model=model,
         args=training_args,
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
