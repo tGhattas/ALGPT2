@@ -19,6 +19,8 @@ if __name__ == '__main__':
     parser.add_argument("--save_steps", type=int, default=10000, help="Steps interval to save the model.")
     # tokenizer_path can be None
     parser.add_argument("--tokenizer_path", type=str, default='', help="Path to the tokenizer.")
+    parser.add_argument("--load_tokenized_datasets", type=bool, default=True, help="Load tokenized datasets.")
+
 
     args = parser.parse_args()
 
