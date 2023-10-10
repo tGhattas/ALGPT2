@@ -91,21 +91,14 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     print(model)
     print("number of parameters:", count_parameters(model))
 
+    if not load_checkpoint and not pretrained:
+        model.init_weights()
+
     # Tokenize dataset
     def tokenize_function(examples):
         # Handle different datasets
-        if 'text' in examples:
-            return tokenizer(examples['text'], padding="max_length", truncation=True, max_length=sequence_max_length)
-        elif 'context' in examples and 'question' in examples:  # For datasets like 'squad_v2'
-            return tokenizer(examples['context'], examples['question'], padding="max_length", truncation=True,
-                             max_length=sequence_max_length)
-        elif 'premise' in examples and 'hypothesis' in examples:  # For datasets like 'snli'
-            return tokenizer(examples['premise'], examples['hypothesis'], padding="max_length", truncation=True,
-                             max_length=sequence_max_length)
-        elif 'sentence' in examples:  # For datasets like 'sst2'
-            return tokenizer(examples['sentence'], padding="max_length", truncation=True, max_length=sequence_max_length)
-        else:
-            raise ValueError("Dataset structure not recognized.")
+        return tokenizer(examples['text'], padding="max_length", truncation=True,
+                         max_length=sequence_max_length, return_attention_mask=True)
 
     tokenized_datasets_path = f"{save_path}/tokenized_datasets/{dataset_path}"
 
@@ -120,8 +113,6 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         tokenized_datasets = tokenized_datasets.map(lambda examples: {'labels': examples['input_ids']}, batched=True)
         # Save tokenized_datasets to disk
         tokenized_datasets.save_to_disk(tokenized_datasets_path)
-        # Update model configuration
-        model.config.is_decoder = True
 
     # shuffle the training dataset
     tokenized_datasets = tokenized_datasets.shuffle(seed=random.randint(0, 100))
