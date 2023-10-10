@@ -17,7 +17,8 @@ if __name__ == '__main__':
     parser.add_argument("--learning_rate", type=float, default=1e-5, help="Learning rate for training.")
     parser.add_argument("--device", type=str, default="gpu", choices=["gpu", "cpu"], help="Device to run on.")
     parser.add_argument("--save_steps", type=int, default=10000, help="Steps interval to save the model.")
-    parser.add_argument("--tokenizer_path", type=str, default="wikitext-103-raw-v1", help="Path to the tokenizer.")
+    # tokenizer_path can be None
+    parser.add_argument("--tokenizer_path", type=str, help="Path to the tokenizer.")
 
     args = parser.parse_args()
 
