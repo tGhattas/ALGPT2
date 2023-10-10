@@ -72,7 +72,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     print("test dataset size:", len(dataset['test']))
 
     # Load tokenizer and model
-    if tokenizer_path is not None and not '':
+    if tokenizer_path is None or tokenizer_path == '':  # Use the default tokenizer
         tokenizer_object = BertTokenizerFast if model_class_name == 'BertLMHeadModel' else GPT2Tokenizer
         tokenizer = tokenizer_object.from_pretrained(model_name)
     else:
