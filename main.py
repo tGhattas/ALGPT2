@@ -144,7 +144,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     )
 
     trainer = Trainer(
-        model=model.to("cuda" if device.lower() == "gpu" else "cpu"),
+        model=model,
         args=training_args,
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
