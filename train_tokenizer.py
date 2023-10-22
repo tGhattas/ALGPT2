@@ -12,7 +12,7 @@ if os.path.isdir("/content/drive"):
 else:
     save_path = "."
 
-def run_tokenizer_training(dataset_path: str = "wikitext-103-raw-v1"):
+def run_tokenizer_training(dataset_path: str = "wikitext-103-v1"):
     # 1. Load the wikitext-103-raw dataset
     dataset = load_dataset('wikitext', dataset_path)
 
@@ -46,7 +46,7 @@ def run_tokenizer_training(dataset_path: str = "wikitext-103-raw-v1"):
 
 
 
-def _check_tokenizer(dataset_path: str = "wikitext-2-raw-v1"):
+def _check_tokenizer(dataset_path: str = "wikitext-2-v1"):
     fast_tokenizer = PreTrainedTokenizerFast(tokenizer_file=f"{save_path}/tokenizer/{dataset_path}_tokenizer.json",)
     dataset = load_dataset('wikitext', dataset_path)
     tokenized_datasets = {}
@@ -88,6 +88,6 @@ def _check_tokenizer(dataset_path: str = "wikitext-2-raw-v1"):
 if __name__ == '__main__':
     # _check_tokenizer()
     parser = argparse.ArgumentParser(description="Run the tokenizer training.")
-    parser.add_argument("--dataset_path", type=str, default="wikitext-103-raw-v1", help="Path to the dataset.")
+    parser.add_argument("--dataset_path", type=str, default="wikitext-103-v1", help="Path to the dataset.")
     args = parser.parse_args()
     run_tokenizer_training(args.dataset_path)

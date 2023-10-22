@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size for training.")
     parser.add_argument("--num_of_epochs", type=float, default=1.0, help="Number of epochs.")
     parser.add_argument("--load_checkpoint", action="store_true", help="Load from a checkpoint.")
-    parser.add_argument("--dataset_path", type=str, default="wikitext-103-raw-v1", help="Path to the dataset.")
+    parser.add_argument("--dataset_path", type=str, default="wikitext-103-v1", help="Path to the dataset.")
     parser.add_argument("--sequence_max_length", type=int, default=512, help="Max sequence length.")
     parser.add_argument("--learning_rate", type=float, default=1e-5, help="Learning rate for training.")
     parser.add_argument("--device", type=str, default="gpu", choices=["gpu", "cpu"], help="Device to run on.")
