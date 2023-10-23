@@ -1,7 +1,7 @@
 import json
 import os
 import random
-import wandb
+# import wandb
 from typing import Optional
 from datasets import load_dataset, load_from_disk
 from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config, TrainerCallback, \
@@ -29,7 +29,7 @@ class PerplexityCallback(TrainerCallback):
         if 'loss' in logs:
             # Calculate perplexity from the train loss and add it to logs
             logs['train_perplexity'] = math.exp(logs['loss'])
-            wandb.log(logs)
+            # wandb.log(logs)
 
 
 # Check if Google Drive is mounted
