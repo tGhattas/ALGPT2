@@ -10,6 +10,8 @@ from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
 import math
 
+HF_PADDING_IGNORE = -100
+
 DEFAULT_MODEL_NAME = "gpt2"
 
 
@@ -110,6 +112,11 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         return tokenizer(examples['text'], padding="max_length", truncation=True,
                          max_length=sequence_max_length, return_attention_mask=True)
 
+    def add_labels_function(examples):
+        labels = examples['input_ids'].copy()
+        labels[labels == tokenizer.pad_token_id] = HF_PADDING_IGNORE
+        return {'labels': labels}
+
     tokenized_datasets_path = f"{save_path}/tokenized_datasets/{dataset_path}"
 
     if os.path.exists(tokenized_datasets_path) and not dont_load_tokenized_datasets:
@@ -121,6 +128,8 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         tokenized_datasets = dataset.map(tokenize_function, batched=True)
         # Add labels for the language modeling task
         tokenized_datasets = tokenized_datasets.map(lambda examples: {'labels': examples['input_ids']}, batched=True)
+        # ignore paddings
+        tokenized_datasets = tokenized_datasets.map(add_labels_function, batched=True)
         # Save tokenized_datasets to disk
         tokenized_datasets.save_to_disk(tokenized_datasets_path)
 
