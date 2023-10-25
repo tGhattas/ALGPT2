@@ -99,8 +99,8 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     print(model)
     print("number of parameters:", count_parameters(model))
 
-    if not load_checkpoint and not pretrained:
-        model.init_weights()
+    # if not load_checkpoint and not pretrained:
+    #     model.init_weights()
 
     # Tokenize dataset
     def tokenize_function(examples):
