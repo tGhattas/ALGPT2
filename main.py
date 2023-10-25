@@ -82,7 +82,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     # Set the padding token for the tokenizer
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-        # tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
     model_class = {'GPT2LMHeadModel': GPT2LMHeadModel,
                    'ALGPT2LMHeadModel': ALGPT2LMHeadModel,
