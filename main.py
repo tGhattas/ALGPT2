@@ -139,7 +139,6 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     # checks
     max_token_id = max([max(seq) for seq in tokenized_datasets['train']['input_ids']])
     assert max_token_id < model.config.vocab_size
-    print('-'*100,len(tokenizer))
 
     # shuffle the training dataset
     # tokenized_datasets = tokenized_datasets.shuffle(seed=random.randint(0, 100))
