@@ -122,6 +122,11 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         # Save tokenized_datasets to disk
         tokenized_datasets.save_to_disk(tokenized_datasets_path)
 
+    # checks
+    max_token_id = max([max(seq) for seq in tokenized_datasets['train']['input_ids']])
+    assert max_token_id < model.config.vocab_size
+    print('-'*100,len(tokenizer))
+
     # shuffle the training dataset
     # tokenized_datasets = tokenized_datasets.shuffle(seed=random.randint(0, 100))
 
