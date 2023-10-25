@@ -54,7 +54,7 @@ def evaluate_post_training(trainer: Trainer, dataset: dict) -> dict:
 
 def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_dataset: bool = False,
         pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32,
-        num_of_epochs: float = 1.0, load_checkpoint: bool = False, dataset_path: str = "wikitext-103--v1",
+        num_of_epochs: float = 1.0, load_checkpoint: bool = False, dataset_path: str = "wikitext-2-v1",
         sequence_max_length: int = 512, learning_rate: float = 1e-5, device="gpu", save_steps: int = 10000,
         tokenizer_path: Optional[str] = None, dont_load_tokenized_datasets: bool = True):
     # Load a small dataset from hugging face
