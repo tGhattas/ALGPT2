@@ -79,10 +79,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     else:
         tokenizer = PreTrainedTokenizerFast(tokenizer_file=f"{save_path}/tokenizer/{tokenizer_path}_tokenizer.json", )
 
-    # Set the padding token for the tokenizer
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+
 
     model_class = {'GPT2LMHeadModel': GPT2LMHeadModel,
                    'ALGPT2LMHeadModel': ALGPT2LMHeadModel,
@@ -98,6 +95,11 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         model = model_class(config)
     print(model)
     print("number of parameters:", count_parameters(model))
+
+    # Set the padding token for the tokenizer
+    if tokenizer.pad_token is None:
+        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        model.resize_token_embeddings(len(tokenizer))
 
     # if not load_checkpoint and not pretrained:
     #     model.init_weights()
