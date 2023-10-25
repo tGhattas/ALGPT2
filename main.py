@@ -113,8 +113,11 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
                          max_length=sequence_max_length, return_attention_mask=True)
 
     def add_labels_function(examples):
-        labels = examples['input_ids'].copy()
-        labels[labels == tokenizer.pad_token_id] = HF_PADDING_IGNORE
+        labels = [id_list.copy() for id_list in examples['input_ids']]
+        for label_list in labels:
+            for i, label_id in enumerate(label_list):
+                if label_id == tokenizer.pad_token_id:
+                    label_list[i] = -100
         return {'labels': labels}
 
     tokenized_datasets_path = f"{save_path}/tokenized_datasets/{dataset_path}"
