@@ -1,11 +1,10 @@
 import json
 import os
-import random
-# import wandb
+import wandb
 from typing import Optional
 from datasets import load_dataset, load_from_disk
 from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config, TrainerCallback, \
-    TrainerState, TrainerControl, PreTrainedTokenizerFast, BertLMHeadModel, BertConfig, BertTokenizerFast
+    TrainerState, TrainerControl, PreTrainedTokenizerFast
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
 import math
@@ -13,7 +12,6 @@ import math
 HF_PADDING_IGNORE = -100
 
 DEFAULT_MODEL_NAME = "gpt2"
-
 
 
 class PerplexityCallback(TrainerCallback):
@@ -31,7 +29,7 @@ class PerplexityCallback(TrainerCallback):
         if 'loss' in logs:
             # Calculate perplexity from the train loss and add it to logs
             logs['train_perplexity'] = math.exp(logs['loss'])
-            # wandb.log(logs)
+            wandb.log(logs)
 
 
 # Check if Google Drive is mounted
@@ -46,11 +44,23 @@ def count_parameters(model):
 
 
 def evaluate_post_training(trainer: Trainer, dataset: dict) -> dict:
+    # Check if the dataset contains 'test' and it's not empty
+    if not dataset.get('test'):
+        raise ValueError("The dataset does not contain a 'test' split or it's empty.")
+
+    # Ensure label_names is set correctly for the trainer
+    if not trainer.label_names:
+        trainer.label_names = ["labels"]
+
     # Evaluate the model
-    trainer_evaluation_result = trainer.evaluate(eval_dataset=dataset['test'])
+    trainer_evaluation_result = trainer.evaluate()
+
     # Compute perplexity
     trainer_evaluation_result['test_mean_perplexity'] = math.exp(trainer_evaluation_result['eval_loss'])
+
+    # Print the results
     pprint(trainer_evaluation_result)
+
     return trainer_evaluation_result
 
 
@@ -76,19 +86,14 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
     # Load tokenizer and model
     if tokenizer_path is None or tokenizer_path == '':  # Use the default tokenizer
-        tokenizer_object = BertTokenizerFast if model_class_name == 'BertLMHeadModel' else GPT2Tokenizer
-        tokenizer = tokenizer_object.from_pretrained(model_name)
+        tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     else:
         tokenizer = PreTrainedTokenizerFast(tokenizer_file=f"{save_path}/tokenizer/{tokenizer_path}_tokenizer.json", )
 
-
-
     model_class = {'GPT2LMHeadModel': GPT2LMHeadModel,
-                   'ALGPT2LMHeadModel': ALGPT2LMHeadModel,
-                   'BertLMHeadModel': BertLMHeadModel}[model_class_name]
+                   'ALGPT2LMHeadModel': ALGPT2LMHeadModel, }[model_class_name]
     model_config = {'GPT2LMHeadModel': GPT2Config,
-                    'ALGPT2LMHeadModel': GPT2Config,
-                    'BertLMHeadModel': BertConfig}[model_class_name]
+                    'ALGPT2LMHeadModel': GPT2Config, }[model_class_name]
     if pretrained:
         model = model_class.from_pretrained(model_name)
     else:
@@ -112,7 +117,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         return tokenizer(examples['text'], padding="max_length", truncation=True,
                          max_length=sequence_max_length, return_attention_mask=True)
 
-    def add_labels_function(examples):
+    def ignore_paddings_function(examples):
         labels = [id_list.copy() for id_list in examples['input_ids']]
         for label_list in labels:
             for i, label_id in enumerate(label_list):
@@ -132,7 +137,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         # Add labels for the language modeling task
         # tokenized_datasets = tokenized_datasets.map(lambda examples: {'labels': examples['input_ids']}, batched=True)
         # ignore paddings
-        tokenized_datasets = tokenized_datasets.map(add_labels_function, batched=True)
+        tokenized_datasets = tokenized_datasets.map(ignore_paddings_function, batched=True)
         # Save tokenized_datasets to disk
         tokenized_datasets.save_to_disk(tokenized_datasets_path)
 
