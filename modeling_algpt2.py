@@ -336,7 +336,7 @@ class ALGPT2Model(GPT2PreTrainedModel):
         if self.config.factorized_embeds:
             logger.warning_once("----  using facrorized embeddings.  ----")
             self.small_embedding_size = 128
-            self.wte = nn.Embedding(config.vocab_size, self.small_embed_dim)
+            self.wte = nn.Embedding(config.vocab_size, self.small_embedding_size)
             self.expand_embeddings = nn.Linear(self.small_embedding_size, self.embed_dim)
         else:
             self.wte = nn.Embedding(config.vocab_size, self.embed_dim)
