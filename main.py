@@ -22,6 +22,7 @@ class PerplexityCallback(TrainerCallback):
         if 'eval_loss' in metrics:
             # Calculate perplexity from the eval loss and add it to metrics
             metrics['eval_perplexity'] = math.exp(metrics['eval_loss'])
+            wandb.log(metrics)
 
     def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
         # Access the logs, which should contain 'loss'
