@@ -20,6 +20,7 @@ if __name__ == '__main__':
     # tokenizer_path can be None
     parser.add_argument("--tokenizer_path", type=str, default='', help="Path to the tokenizer.")
     parser.add_argument("--dont_load_tokenized_datasets", action="store_true", help="Don't load tokenized datasets.")
+    parser.add_argument("--factorized_embeds", action="store_true", help="use factorized embedding mat of 128.")
 
 
     args = parser.parse_args()
@@ -37,4 +38,5 @@ if __name__ == '__main__':
         learning_rate=args.learning_rate,
         device=args.device,
         save_steps=args.save_steps,
-        tokenizer_path=args.tokenizer_path)
+        tokenizer_path=args.tokenizer_path,
+        factorized_embeds=args.factorized_embeds)

@@ -333,8 +333,14 @@ class ALGPT2Model(GPT2PreTrainedModel):
         super().__init__(config)
 
         self.embed_dim = config.hidden_size
+        if self.config.factorized_embeds:
+            logger.warning_once("----  using facrorized embeddings.  ----")
+            self.small_embedding_size = 128
+            self.wte = nn.Embedding(config.vocab_size, self.small_embed_dim)
+            self.expand_embeddings = nn.Linear(self.small_embedding_size, self.embed_dim)
+        else:
+            self.wte = nn.Embedding(config.vocab_size, self.embed_dim)
 
-        self.wte = nn.Embedding(config.vocab_size, self.embed_dim)
         self.wpe = nn.Embedding(config.max_position_embeddings, self.embed_dim)
 
         self.drop = nn.Dropout(config.embd_pdrop)
@@ -443,11 +449,15 @@ class ALGPT2Model(GPT2PreTrainedModel):
 
         if inputs_embeds is None:
             inputs_embeds = self.wte(input_ids)
+            if self.config.factorized_embeds:
+                inputs_embeds = self.expand_embeddings(inputs_embeds)
         position_embeds = self.wpe(position_ids)
         hidden_states = inputs_embeds + position_embeds
 
         if token_type_ids is not None:
             token_type_embeds = self.wte(token_type_ids)
+            if self.config.factorized_embeds:
+                token_type_embeds = self.expand_embeddings(token_type_embeds)
             hidden_states = hidden_states + token_type_embeds
 
         hidden_states = self.drop(hidden_states)
@@ -465,7 +475,8 @@ class ALGPT2Model(GPT2PreTrainedModel):
         all_self_attentions = () if output_attentions else None
         all_cross_attentions = () if output_attentions and self.config.add_cross_attention else None
         all_hidden_states = () if output_hidden_states else None
-        block = self.h[0]  # TODO
+        block = self.h[0]
+        # looping using same layer - ALBERT parameters sharing
         for i in range(self.config.n_layer):
 
             if output_hidden_states:
