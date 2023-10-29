@@ -72,7 +72,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         tokenizer_path: Optional[str] = None, dont_load_tokenized_datasets: bool = True,
         factorized_embeds: bool = False, small_embedding_size: int = 128):
     # Load a small dataset from hugging face
-    assert device.lower() in ["gpu", "tpu", "cpu"]
+    assert device.lower() in ["gpu", "tpu", "cpu", "mps"]
     assert dataset_path in ['wikitext-2-v1', 'wikitext-103-v1']
 
     dataset_path = dataset_path if not minimize_dataset else "wikitext-2-v1"
