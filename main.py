@@ -69,7 +69,8 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32,
         num_of_epochs: float = 1.0, load_checkpoint: bool = False, dataset_path: str = "wikitext-2-v1",
         sequence_max_length: int = 512, learning_rate: float = 1e-5, device="gpu", save_steps: int = 10000,
-        tokenizer_path: Optional[str] = None, dont_load_tokenized_datasets: bool = True, factorized_embeds: bool = False):
+        tokenizer_path: Optional[str] = None, dont_load_tokenized_datasets: bool = True,
+        factorized_embeds: bool = False, small_embedding_size: int = 128):
     # Load a small dataset from hugging face
     assert device.lower() in ["gpu", "tpu", "cpu"]
     assert dataset_path in ['wikitext-2-v1', 'wikitext-103-v1']
@@ -98,8 +99,10 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     if pretrained:
         model = model_class.from_pretrained(model_name)
     else:
-        config = model_config(vocab_size=tokenizer.vocab_size, factorized_embeds=factorized_embeds) if depth is None else GPT2Config(
-            vocab_size=tokenizer.vocab_size, n_layer=depth, factorized_embeds=factorized_embeds)
+        config = model_config(vocab_size=tokenizer.vocab_size, factorized_embeds=factorized_embeds,
+                              small_embedding_size=small_embedding_size) if depth is None else GPT2Config(
+            vocab_size=tokenizer.vocab_size, n_layer=depth, factorized_embeds=factorized_embeds,
+            small_embedding_size=small_embedding_size)
         model = model_class(config)
     print(model)
     print("number of parameters:", count_parameters(model))

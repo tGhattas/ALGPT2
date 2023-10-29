@@ -335,13 +335,14 @@ class ALGPT2Model(GPT2PreTrainedModel):
         self.embed_dim = config.hidden_size
         if self.config.factorized_embeds:
             logger.warning_once("----  using facrorized embeddings.  ----")
-            self.small_embedding_size = 128
+            self.small_embedding_size = self.config.small_embedding_size
             self.wte = nn.Embedding(config.vocab_size, self.small_embedding_size)
+            self.wpe = nn.Embedding(config.max_position_embeddings, self.small_embedding_size)
             self.expand_embeddings = nn.Linear(self.small_embedding_size, self.embed_dim)
         else:
             self.wte = nn.Embedding(config.vocab_size, self.embed_dim)
 
-        self.wpe = nn.Embedding(config.max_position_embeddings, self.embed_dim)
+            self.wpe = nn.Embedding(config.max_position_embeddings, self.embed_dim)
 
         self.drop = nn.Dropout(config.embd_pdrop)
         self.h = nn.ModuleList([GPT2Block(config, layer_idx=0)])  # reducing to one layer
@@ -449,16 +450,16 @@ class ALGPT2Model(GPT2PreTrainedModel):
 
         if inputs_embeds is None:
             inputs_embeds = self.wte(input_ids)
-            if self.config.factorized_embeds:
-                inputs_embeds = self.expand_embeddings(inputs_embeds)
+
         position_embeds = self.wpe(position_ids)
         hidden_states = inputs_embeds + position_embeds
 
         if token_type_ids is not None:
             token_type_embeds = self.wte(token_type_ids)
-            if self.config.factorized_embeds:
-                token_type_embeds = self.expand_embeddings(token_type_embeds)
             hidden_states = hidden_states + token_type_embeds
+
+        if self.config.factorized_embeds:
+            hidden_states = self.expand_embeddings(hidden_states)
 
         hidden_states = self.drop(hidden_states)
 
@@ -550,8 +551,12 @@ class ALGPT2LMHeadModel(GPT2PreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.transformer = ALGPT2Model(config)
-        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
 
+        if config.factorized_embeds:
+            self.compress_embeds = nn.Linear(config.n_embd, config.small_embedding_size)
+            self.lm_head = nn.Linear(config.small_embedding_size, config.vocab_size, bias=False)
+        else:
+            self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
         # Model parallel
         self.model_parallel = False
         self.device_map = None
@@ -648,8 +653,11 @@ class ALGPT2LMHeadModel(GPT2PreTrainedModel):
         if self.model_parallel:
             torch.cuda.set_device(self.transformer.first_device)
             hidden_states = hidden_states.to(self.lm_head.weight.device)
-
-        lm_logits = self.lm_head(hidden_states)
+        if self.config.factorized_embeds:
+            compressed_hidden_states = self.compress_embeds(hidden_states)
+            lm_logits = self.lm_head(compressed_hidden_states)
+        else:
+            lm_logits = self.lm_head(hidden_states)
 
         loss = None
         if labels is not None:
@@ -751,4 +759,68 @@ GPT2LMHeadModel(
   )
   (lm_head): Linear(in_features=768, out_features=50257, bias=False)
 )
+
+
+ALGPT2LMHeadModel(
+  (transformer): ALGPT2Model(
+    (wte): Embedding(47545, 768)
+    (wpe): Embedding(1024, 768)
+    (drop): Dropout(p=0.1, inplace=False)
+    (h): ModuleList(
+      (0): GPT2Block(
+        (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        (attn): GPT2Attention(
+          (c_attn): Conv1D()
+          (c_proj): Conv1D()
+          (attn_dropout): Dropout(p=0.1, inplace=False)
+          (resid_dropout): Dropout(p=0.1, inplace=False)
+        )
+        (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        (mlp): GPT2MLP(
+          (c_fc): Conv1D()
+          (c_proj): Conv1D()
+          (act): NewGELUActivation()
+          (dropout): Dropout(p=0.1, inplace=False)
+        )
+      )
+    )
+    (ln_f): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+  )
+  (lm_head): Linear(in_features=768, out_features=47545, bias=False)
+)
+
+
+ALGPT2 with factorization:
+
+ALGPT2LMHeadModel(
+  (transformer): ALGPT2Model(
+    (wte): Embedding(47545, 128)
+    (expand_embeddings): Linear(in_features=128, out_features=768, bias=True)
+    (wpe): Embedding(1024, 768)
+    (drop): Dropout(p=0.1, inplace=False)
+    (h): ModuleList(
+      (0): GPT2Block(
+        (ln_1): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        (attn): GPT2Attention(
+          (c_attn): Conv1D()
+          (c_proj): Conv1D()
+          (attn_dropout): Dropout(p=0.1, inplace=False)
+          (resid_dropout): Dropout(p=0.1, inplace=False)
+        )
+        (ln_2): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+        (mlp): GPT2MLP(
+          (c_fc): Conv1D()
+          (c_proj): Conv1D()
+          (act): NewGELUActivation()
+          (dropout): Dropout(p=0.1, inplace=False)
+        )
+      )
+    )
+    (ln_f): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+  )
+  (lm_head): Linear(in_features=768, out_features=47545, bias=False)
+)
+
+
+
 '''
