@@ -45,9 +45,6 @@ def count_parameters(model):
 
 
 def evaluate_post_training(trainer: Trainer, dataset: dict) -> dict:
-    # Check if the dataset contains 'test' and it's not empty
-    if not dataset.get('test'):
-        raise ValueError("The dataset does not contain a 'test' split or it's empty.")
 
     # Ensure label_names is set correctly for the trainer
     if not trainer.label_names:
@@ -178,14 +175,18 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     )
 
     full_path = f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}"
-    # Start training
-    trainer.train(resume_from_checkpoint=full_path) if load_checkpoint else trainer.train()
-
+    try:
+        # Start training
+        trainer.train(resume_from_checkpoint=full_path) if load_checkpoint else trainer.train()
+    except Exception as e:
+        print(e)
+    finally:
+        trainer_evaluation_result = evaluate_post_training(trainer, dataset)
+        with open(f"{full_path}/eval_results.json", 'w') as f:
+            json.dump(trainer_evaluation_result, f)
     # Save the model
     trainer.save_model(full_path)
-    trainer_evaluation_result = evaluate_post_training(trainer, dataset)
-    with open(f"{full_path}/eval_results.json", 'w') as f:
-        json.dump(trainer_evaluation_result, f)
+
 
 
 if __name__ == '__main__':
