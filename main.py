@@ -66,8 +66,8 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         pretrained: bool = False, depth: Optional[int] = None, batch_size: int = 32,
         num_of_epochs: float = 1.0, load_checkpoint: bool = False, dataset_path: str = "wikitext-2-v1",
         sequence_max_length: int = 512, learning_rate: float = 1e-5, device="gpu", save_steps: int = 10000,
-        tokenizer_path: Optional[str] = None, dont_load_tokenized_datasets: bool = False,
-        dont_save_tokenized_datasets: bool = False,
+        tokenizer_path: Optional[str] = None, load_tokenized_datasets: bool = False,
+        save_tokenized_datasets: bool = False,
         factorized_embeds: bool = False, small_embedding_size: int = 128):
     # Load a small dataset from hugging face
     assert device.lower() in ["gpu", "tpu", "cpu", "mps"]
@@ -129,7 +129,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
     tokenized_datasets_path = f"{save_path}/tokenized_datasets/{dataset_path}"
 
-    if os.path.exists(tokenized_datasets_path) and not dont_load_tokenized_datasets:
+    if os.path.exists(tokenized_datasets_path) and load_tokenized_datasets:
         # Load tokenized_datasets from disk
         print("Loading tokenized_datasets from disk...")
         tokenized_datasets = load_from_disk(tokenized_datasets_path, keep_in_memory=True)
@@ -140,7 +140,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         # tokenized_datasets = tokenized_datasets.map(lambda examples: {'labels': examples['input_ids']}, batched=True)
         # ignore paddings
         tokenized_datasets = tokenized_datasets.map(ignore_paddings_function, batched=True)
-        if not dont_save_tokenized_datasets:
+        if save_tokenized_datasets:
             # Save tokenized_datasets to disk
             tokenized_datasets.save_to_disk(tokenized_datasets_path)
 

@@ -19,8 +19,8 @@ if __name__ == '__main__':
     parser.add_argument("--save_steps", type=int, default=10000, help="Steps interval to save the model.")
     # tokenizer_path can be None
     parser.add_argument("--tokenizer_path", type=str, default='', help="Path to the tokenizer.")
-    parser.add_argument("--dont_load_tokenized_datasets", action="store_true", help="Don't load tokenized datasets.")
-    parser.add_argument("--dont_save_tokenized_datasets", action="store_true", help="Don't save tokenized datasets.")
+    parser.add_argument("--load_tokenized_datasets", default=False, action="store_true", help="load tokenized datasets.")
+    parser.add_argument("--save_tokenized_datasets", default=False, action="store_true", help="save tokenized datasets.")
     parser.add_argument("--factorized_embeds", action="store_true", help="use factorized embedding mat of 128.")
 
 
@@ -41,5 +41,5 @@ if __name__ == '__main__':
         save_steps=args.save_steps,
         tokenizer_path=args.tokenizer_path,
         factorized_embeds=args.factorized_embeds,
-        dont_load_tokenized_datasets=args.dont_load_tokenized_datasets,
-        dont_save_tokenized_datasets=args.dont_save_tokenized_datasets)
+        load_tokenized_datasets=args.load_tokenized_datasets,
+        save_tokenized_datasets=args.save_tokenized_datasets)
