@@ -67,6 +67,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         num_of_epochs: float = 1.0, load_checkpoint: bool = False, dataset_path: str = "wikitext-2-v1",
         sequence_max_length: int = 512, learning_rate: float = 1e-5, device="gpu", save_steps: int = 10000,
         tokenizer_path: Optional[str] = None, dont_load_tokenized_datasets: bool = True,
+        dont_save_tokenized_datasets: bool = True,
         factorized_embeds: bool = False, small_embedding_size: int = 128):
     # Load a small dataset from hugging face
     assert device.lower() in ["gpu", "tpu", "cpu", "mps"]
@@ -139,8 +140,9 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         # tokenized_datasets = tokenized_datasets.map(lambda examples: {'labels': examples['input_ids']}, batched=True)
         # ignore paddings
         tokenized_datasets = tokenized_datasets.map(ignore_paddings_function, batched=True)
-        # Save tokenized_datasets to disk
-        tokenized_datasets.save_to_disk(tokenized_datasets_path)
+        if not dont_save_tokenized_datasets:
+            # Save tokenized_datasets to disk
+            tokenized_datasets.save_to_disk(tokenized_datasets_path)
 
     # checks
     max_token_id = max([max(seq) for seq in tokenized_datasets['train']['input_ids']])
