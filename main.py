@@ -135,6 +135,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         tokenized_datasets = load_from_disk(tokenized_datasets_path, keep_in_memory=True)
     else:
         # Tokenize dataset
+        print("Tokenizing dataset...")
         tokenized_datasets = dataset.map(tokenize_function, batched=True)
         # Add labels for the language modeling task
         # tokenized_datasets = tokenized_datasets.map(lambda examples: {'labels': examples['input_ids']}, batched=True)
@@ -142,6 +143,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         tokenized_datasets = tokenized_datasets.map(ignore_paddings_function, batched=True)
         if save_tokenized_datasets:
             # Save tokenized_datasets to disk
+            print("Saving tokenized dataset...")
             tokenized_datasets.save_to_disk(tokenized_datasets_path)
 
     # checks
