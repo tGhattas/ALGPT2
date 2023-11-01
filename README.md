@@ -33,5 +33,5 @@ python run_model.py --model_class_name [ALGPT2LMHeadModel or  ALGPT2LMHeadModel]
 
 ## Results
 ### Eval mean perplexities
-![Screenshot 2023-11-01 at 19.48.43.png](..%2F..%2F..%2F..%2Fvar%2Ffolders%2Fzs%2F88l5vmb519j61fzcjgt5zjl00000gp%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_oJPgUd%2FScreenshot%202023-11-01%20at%2019.48.43.png)
+![eval_perplexities.png](./readme-media/eval_perplexities.png)
 ### For the full report in WANDB click [here](https://api.wandb.ai/links/tghattas-team/qd1vaj5y)
