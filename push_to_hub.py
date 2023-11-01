@@ -42,7 +42,7 @@ def push_model_to_hub(model_class_name: str, depth: Optional[int] = None, datase
     model.push_to_hub(hf_model_name, use_auth_token=True)
     tokenizer.push_to_hub(hf_model_name, use_auth_token=True)
 
-    print(f"Model and tokenizer have been pushed to Hugging Face Model Hub with name: {model_name}")
+    print(f"Model and tokenizer have been pushed to Hugging Face Model Hub with name: {hf_model_name}")
 
 
 if __name__ == "__main__":
