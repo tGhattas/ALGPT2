@@ -15,10 +15,10 @@ Implementarion of two ALBERT techniques on GPT2 model:
 
 ## Technicalities
 - Trained on 2 x Nvidia RTX6000 Ada 48 GB
-- batch size of 60
-- for 6 epochs
+- Batch size of 60
+- For 6 epochs
 - Learning rate of 6e-4
-- tokenized the data using a BPE based tokenizer that we pretrained on the same dataset
+- Tokenized the data using a BPE based tokenizer that we pretrained on the same dataset
 
 ## Runbook
 Training the tokenizer on wikitext variants
