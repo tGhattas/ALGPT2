@@ -7,11 +7,11 @@ Implementarion of two ALBERT techniques on GPT2 model:
 
 - Standard GPT2 pretrained on `wikitext-103-v1`:
 
-| Model Description                                                      | HuggingFace hub                                                                                                                     |
-|------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| ALGPT2 with embeddings factorization pretrained and parameters sharing | [Link](https://huggingface.co/tGhattas/ALGPT2LMHeadModel-default_depth-wikitext-103-v1_factorized_embeds_wandb_dreadful_goblin_92)      |
-| ALGPT2 with only parameters sharing                                    | [Link](https://huggingface.co/tGhattas/ALGPT2LMHeadModel-default_depth-wikitext-103-v1_not_factorized_embeds_wandb_ritualistic-mummy-97) |
-| Standard GPT2 pretraining                                                | [Link](https://huggingface.co/tGhattas/GPT2LMHeadModel-default_depth-wikitext-103-v1_not_factorized_embeds_wandb_enchanted_bones_98) |
+| Model Description                                                     | HuggingFace hub                                                                                                                     |
+|-----------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| ALGPT2 with embeddings factorization and parameters sharing | [Link](https://huggingface.co/tGhattas/ALGPT2LMHeadModel-default_depth-wikitext-103-v1_factorized_embeds_wandb_dreadful_goblin_92)      |
+| ALGPT2 with only parameters sharing                                   | [Link](https://huggingface.co/tGhattas/ALGPT2LMHeadModel-default_depth-wikitext-103-v1_not_factorized_embeds_wandb_ritualistic-mummy-97) |
+| Standard GPT2 pretraining                                               | [Link](https://huggingface.co/tGhattas/GPT2LMHeadModel-default_depth-wikitext-103-v1_not_factorized_embeds_wandb_enchanted_bones_98) |
 
 ## Technicalities
 - Trained on 2 x Nvidia RTX6000 Ada 48 GB
