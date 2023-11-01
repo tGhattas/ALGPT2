@@ -14,7 +14,7 @@ MODEL_CLASSES = {
 
 
 def push_model_to_hub(model_class_name: str, depth: Optional[int] = None, dataset_path: str = "wikitext-2-v1",
-                      save_path=".", factorized_embeds: bool=False):
+                      save_path=".", factorized_embeds: bool = False, hf_name_appendix: str = ""):
     # Assert that model_class_name is valid
     assert model_class_name in MODEL_CLASSES, f"Model class {model_class_name} not supported. Supported classes are: {list(MODEL_CLASSES.keys())}"
 
@@ -35,7 +35,8 @@ def push_model_to_hub(model_class_name: str, depth: Optional[int] = None, datase
     tokenizer = GPT2Tokenizer.from_pretrained(full_path)
 
     # Push model and tokenizer to Hugging Face Model Hub
-    hf_model_name=f"{model_name}_{'factorized_embeds' if factorized_embeds else 'not_factorized_embeds'}"
+    appendix = f"_{hf_name_appendix}" if hf_name_appendix != "" else ""
+    hf_model_name = f"{model_name}_{'factorized_embeds' if factorized_embeds else 'not_factorized_embeds'}{appendix}"
     model.push_to_hub(hf_model_name, use_auth_token=True)
     tokenizer.push_to_hub(hf_model_name, use_auth_token=True)
 
@@ -57,8 +58,10 @@ if __name__ == "__main__":
     parser.add_argument("--save_path", default=".",
                         help="Path where the trained model and tokenizer are saved. E.g., ./path_to_your_saved_model_directory")
     parser.add_argument("--factorized_embeds", default=False, action="store_true", help="is factorized_embeds")
+    parser.add_argument("--hf_name_end", default="",
+                        help="Appendix to the hugging face name with underscore")
     args = parser.parse_args()
 
     # Run the function with the provided arguments
     push_model_to_hub(model_class_name=args.model_class_name, depth=args.depth, dataset_path=args.dataset_path,
-                      save_path=args.save_path, factorized_embeds=args.factorized_embeds)
+                      save_path=args.save_path, factorized_embeds=args.factorized_embeds, hf_name_appendix=args.hf_name_end)
