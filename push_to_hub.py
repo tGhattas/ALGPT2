@@ -35,8 +35,9 @@ def push_model_to_hub(model_class_name: str, depth: Optional[int] = None, datase
     tokenizer = GPT2Tokenizer.from_pretrained(full_path)
 
     # Push model and tokenizer to Hugging Face Model Hub
+    hf_model_name = f"{model_class_name}-{depth if depth is not None else 'default_depth'}-{dataset_path}"
     appendix = f"_{hf_name_appendix}" if hf_name_appendix != "" else ""
-    hf_model_name = f"{model_name}_{'factorized_embeds' if factorized_embeds else 'not_factorized_embeds'}{appendix}"
+    hf_model_name = f"{hf_model_name}_{'factorized_embeds' if factorized_embeds else 'not_factorized_embeds'}{appendix}"
     model.push_to_hub(hf_model_name, use_auth_token=True)
     tokenizer.push_to_hub(hf_model_name, use_auth_token=True)
 
