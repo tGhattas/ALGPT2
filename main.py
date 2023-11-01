@@ -156,7 +156,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     training_args = TrainingArguments(
         output_dir="./results",
         per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=64,
+        per_device_eval_batch_size=64 if not minimize_dataset else 10,
         num_train_epochs=num_of_epochs,
         logging_dir='./logs',
         logging_steps=100,
@@ -186,15 +186,17 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     except Exception as e:
         print(e)
     finally:
+        # Save the model
+        trainer.save_model(full_path)
         trainer_evaluation_result = evaluate_post_training(trainer, dataset)
-        with open(f"{full_path}/eval_results.json", 'w') as f:
+        with open(f"{full_path}/eval_results.json", 'w+') as f:
             json.dump(trainer_evaluation_result, f)
-    # Save the model
-    trainer.save_model(full_path)
+
+
 
 
 
 if __name__ == '__main__':
-    run(model_class_name='ALGPT2LMHeadModel', minimize_dataset=True, pretrained=False, depth=3, load_checkpoint=False,
+    run(model_class_name='ALGPT2LMHeadModel',batch_size=5, minimize_dataset=True, pretrained=False, depth=2, load_checkpoint=False,
         num_of_epochs=0.5,
-        dataset_path="wikitext-2-v1")
+        dataset_path="wikitext-2-v1", factorized_embeds=True)
