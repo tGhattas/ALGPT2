@@ -3,7 +3,7 @@ from typing import Optional
 
 import argparse
 
-from transformers import GPT2Tokenizer, GPT2LMHeadModel
+from transformers import GPT2LMHeadModel, PreTrainedTokenizerFast
 
 from modeling_algpt2 import ALGPT2LMHeadModel
 
@@ -32,7 +32,8 @@ def push_model_to_hub(model_class_name: str, depth: Optional[int] = None, datase
     model = MODEL_CLASSES[model_class_name].from_pretrained(full_path, factorized_embeds=factorized_embeds)
 
     # Load your trained tokenizer
-    tokenizer = GPT2Tokenizer.from_pretrained(full_path)
+    tokenizer_path = dataset_path
+    tokenizer = PreTrainedTokenizerFast(tokenizer_file=f"{save_path}/tokenizer/{tokenizer_path}_tokenizer.json", )
 
     # Push model and tokenizer to Hugging Face Model Hub
     hf_model_name = f"{model_class_name}-{depth if depth is not None else 'default_depth'}-{dataset_path}"
