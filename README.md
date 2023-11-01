@@ -27,7 +27,7 @@ python train_tokenizer.py --dataset_path [wikitext-103-v1 or wikitext-2-v1]
 
 Running the pretraining
 ```bash
-python run_model.py --model_class_name [ALGPT2LMHeadModel or  ALGPT2LMHeadModel] --batch_size 60 --num_of_epochs 6  --sequence_max_length 256 --learning_rate 0.0006 --device gpu --save_steps 2000 --dataset_path [wikitext-103-v1 or wikitext-2-v1]   --tokenizer_path [wikitext-103-v1 or wikitext-2-v1] [--factorized_embeds]
+python run_model.py --model_class_name [GPT2LMHeadModel or  ALGPT2LMHeadModel] --batch_size 60 --num_of_epochs 6  --sequence_max_length 256 --learning_rate 0.0006 --device gpu --save_steps 2000 --dataset_path [wikitext-103-v1 or wikitext-2-v1]   --tokenizer_path [wikitext-103-v1 or wikitext-2-v1] [--factorized_embeds]
 
 ```
 
