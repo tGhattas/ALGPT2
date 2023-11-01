@@ -124,7 +124,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         for label_list in labels:
             for i, label_id in enumerate(label_list):
                 if label_id == tokenizer.pad_token_id:
-                    label_list[i] = -100
+                    label_list[i] = HF_PADDING_IGNORE
         return {'labels': labels}
 
     tokenized_datasets_path = f"{save_path}/tokenized_datasets/{dataset_path}"
