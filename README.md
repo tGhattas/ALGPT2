@@ -35,4 +35,8 @@ python run_model.py --model_class_name [GPT2LMHeadModel or  ALGPT2LMHeadModel] -
 ## Results
 ### Eval mean perplexities
 ![eval_perplexities.png](./readme-media/eval_perplexities.png)
-### For the full report in WANDB click [here](https://api.wandb.ai/links/tghattas-team/qd1vaj5y)
+### For the full pretraining report in WANDB click [here](https://api.wandb.ai/links/tghattas-team/qd1vaj5y)
+### Additional variable depth experiment
+In this experiment we check the effect of running the shared parameters layer for variable iterations differing from the
+trained default constant of 12 iterations (blocks).
+for the report in WANDB click [here](https://api.wandb.ai/links/tghattas-team/ol4dn6se)
