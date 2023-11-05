@@ -477,11 +477,7 @@ class ALGPT2Model(GPT2PreTrainedModel):
         all_cross_attentions = () if output_attentions and self.config.add_cross_attention else None
         all_hidden_states = () if output_hidden_states else None
         block = self.h[0]
-        # looping using same layer - ALBERT parameters sharing
-        # if not self.training and self.config.eval_depth is not None:
-        #     iterations_count = self.config.eval_depth
-        # else:
-        #     iterations_count = self.config.n_layer
+
         for i in range(self.config.n_layer):
 
             if output_hidden_states:
