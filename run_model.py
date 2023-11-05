@@ -22,7 +22,9 @@ if __name__ == '__main__':
     parser.add_argument("--load_tokenized_datasets", default=False, action="store_true", help="load tokenized datasets.")
     parser.add_argument("--save_tokenized_datasets", default=False, action="store_true", help="save tokenized datasets.")
     parser.add_argument("--factorized_embeds", action="store_true", help="use factorized embedding mat of 128.")
-
+    parser.add_argument("--hf_hub_path", type=str, default=None, help="Path to the model on Hugging Face hub.")
+    parser.add_argument("--eval_depth", type=int, default=None, help="Depth to use for evaluation.")
+    parser.add_argument("--eval_only", action='store_true', help="Run in evaluation-only mode.")
 
     args = parser.parse_args()
 
@@ -42,4 +44,7 @@ if __name__ == '__main__':
         tokenizer_path=args.tokenizer_path,
         factorized_embeds=args.factorized_embeds,
         load_tokenized_datasets=args.load_tokenized_datasets,
-        save_tokenized_datasets=args.save_tokenized_datasets)
+        save_tokenized_datasets=args.save_tokenized_datasets,
+        hf_hub_path=args.hf_hub_path,
+        eval_depth=args.eval_depth,
+        eval_only=args.eval_only)

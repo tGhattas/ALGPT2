@@ -1,10 +1,10 @@
 import json
 import os
 import wandb
-from typing import Optional
+from typing import Optional, Union
 from datasets import load_dataset, load_from_disk
 from transformers import GPT2Tokenizer, Trainer, TrainingArguments, GPT2LMHeadModel, GPT2Config, TrainerCallback, \
-    TrainerState, TrainerControl, PreTrainedTokenizerFast, AlbertPreTrainedModel
+    TrainerState, TrainerControl, PreTrainedTokenizerFast, AutoTokenizer
 from pprint import pprint
 from modeling_algpt2 import ALGPT2LMHeadModel
 import math
@@ -44,7 +44,7 @@ def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-def evaluate_post_training(trainer: Trainer, dataset: dict) -> dict:
+def evaluate_post_training(trainer: Union[Trainer, GPT2LMHeadModel, ALGPT2LMHeadModel], dataset: dict) -> dict:
 
     # Ensure label_names is set correctly for the trainer
     if not trainer.label_names:
@@ -67,8 +67,9 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         num_of_epochs: float = 1.0, load_checkpoint: bool = False, dataset_path: str = "wikitext-2-v1",
         sequence_max_length: int = 512, learning_rate: float = 1e-5, device="gpu", save_steps: int = 10000,
         tokenizer_path: Optional[str] = None, load_tokenized_datasets: bool = False,
-        save_tokenized_datasets: bool = False,
-        factorized_embeds: bool = False, small_embedding_size: int = 128):
+        save_tokenized_datasets: bool = False, factorized_embeds: bool = False, small_embedding_size: int = 128,
+        hf_hub_path: Optional[str] = None, eval_depth: Optional[int] = None, eval_only: bool = False
+        ):
     # Load a small dataset from hugging face
     assert device.lower() in ["gpu", "tpu", "cpu", "mps"]
     assert dataset_path in ['wikitext-2-v1', 'wikitext-103-v1']
@@ -85,7 +86,10 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     print("test dataset size:", len(dataset['test']))
 
     # Load tokenizer and model
-    if tokenizer_path is None or tokenizer_path == '':  # Use the default tokenizer
+    if hf_hub_path is not None:
+        print("Loading tokenizer from hub...")
+        tokenizer = PreTrainedTokenizerFast.from_pretrained(hf_hub_path)
+    elif tokenizer_path is None or tokenizer_path == '':  # Use the default tokenizer
         tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     else:
         tokenizer = PreTrainedTokenizerFast(tokenizer_file=f"{save_path}/tokenizer/{tokenizer_path}_tokenizer.json", )
@@ -94,8 +98,13 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
                    'ALGPT2LMHeadModel': ALGPT2LMHeadModel, }[model_class_name]
     model_config = {'GPT2LMHeadModel': GPT2Config,
                     'ALGPT2LMHeadModel': GPT2Config, }[model_class_name]
-    if pretrained:
-        model = model_class.from_pretrained(model_name)
+    if pretrained or hf_hub_path is not None:
+        if eval_depth is not None:
+            assert model_class_name == 'ALGPT2LMHeadModel', "eval_depth implemented only for ALGPT2"
+            print(f"Will evaluate with increased depth of {eval_depth}")
+            model = model_class.from_pretrained(hf_hub_path or model_name, eval_depth=eval_depth)
+        else:
+            model = model_class.from_pretrained(hf_hub_path or model_name)
     else:
         config = model_config(vocab_size=tokenizer.vocab_size, factorized_embeds=factorized_embeds,
                               small_embedding_size=small_embedding_size) if depth is None else GPT2Config(
@@ -104,7 +113,8 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         model = model_class(config)
     print(model)
     print("number of parameters:", count_parameters(model))
-
+    if eval_only:
+        model.eval()
     # Set the padding token for the tokenizer
     if tokenizer.pad_token is None:
         tokenizer.add_special_tokens({'pad_token': '[PAD]'})
@@ -138,7 +148,6 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
         print("Tokenizing dataset...")
         tokenized_datasets = dataset.map(tokenize_function, batched=True)
         # Add labels for the language modeling task
-        # tokenized_datasets = tokenized_datasets.map(lambda examples: {'labels': examples['input_ids']}, batched=True)
         # ignore paddings
         tokenized_datasets = tokenized_datasets.map(ignore_paddings_function, batched=True)
         if save_tokenized_datasets:
@@ -156,7 +165,7 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
     training_args = TrainingArguments(
         output_dir="./results",
         per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=64 if not minimize_dataset else 10,
+        per_device_eval_batch_size=batch_size if eval_only else 64,
         num_train_epochs=num_of_epochs,
         logging_dir='./logs',
         logging_steps=100,
@@ -181,13 +190,15 @@ def run(model_class_name: str, model_name: str = DEFAULT_MODEL_NAME, minimize_da
 
     full_path = f"{save_path}/save_{model_class_name}-{depth}-{dataset_path}"
     try:
-        # Start training
-        trainer.train(resume_from_checkpoint=full_path) if load_checkpoint else trainer.train()
+        if not eval_only:
+            # Start training
+            trainer.train(resume_from_checkpoint=full_path) if load_checkpoint else trainer.train()
     except Exception as e:
         print(e)
     finally:
-        # Save the model
-        trainer.save_model(full_path)
+        if not eval_only:
+            # Save the model
+            trainer.save_model(full_path)
         trainer_evaluation_result = evaluate_post_training(trainer, dataset)
         with open(f"{full_path}/eval_results.json", 'w+') as f:
             json.dump(trainer_evaluation_result, f)

@@ -478,6 +478,10 @@ class ALGPT2Model(GPT2PreTrainedModel):
         all_hidden_states = () if output_hidden_states else None
         block = self.h[0]
         # looping using same layer - ALBERT parameters sharing
+        # if not self.training and self.config.eval_depth is not None:
+        #     iterations_count = self.config.eval_depth
+        # else:
+        #     iterations_count = self.config.n_layer
         for i in range(self.config.n_layer):
 
             if output_hidden_states:
@@ -548,7 +552,10 @@ class ALGPT2Model(GPT2PreTrainedModel):
 class ALGPT2LMHeadModel(GPT2PreTrainedModel):
     _tied_weights_keys = ["lm_head.weight"]
 
-    def __init__(self, config):
+    def __init__(self, config, eval_depth: Optional[int] = None):
+        config.eval_depth = eval_depth
+        if eval_depth is not None:
+            config.n_layer = eval_depth
         super().__init__(config)
         self.transformer = ALGPT2Model(config)
 
